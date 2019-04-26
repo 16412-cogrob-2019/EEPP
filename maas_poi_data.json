@@ -1,13 +1,13 @@
 [
     {
-        "node_id" : 1,
-        "node_reward" : 3.0,
+        "poi_id" : 1,
+        "poi_id_reward" : 3.0,
         "x" : 0.0,
         "y" : 0.0
     },
     {
-        "node_id" : 2,
-        "node_reward" : 7.0,
+        "poi_id" : 2,
+        "poi_reward" : 7.0,
         "x" : 10.0,
         "y" : 10.0
     }
