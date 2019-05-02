@@ -1,9 +1,12 @@
 <launch>
+  <arg name="map_server" default="true"/>
   <arg name="test" default="true"/>
 
   <!-- Run the map server -->
-  <arg name="map_file" default="$(find path_planning)/map2.yaml"/>
-  <node name="map_server" pkg="map_server" type="map_server" args="$(arg map_file)" />
+  <group if="$(arg map_server)">
+    <arg name="map_file" default="$(find path_planning)/map2.yaml"/>
+    <node name="map_server" pkg="map_server" type="map_server" args="$(arg map_file)" />
+  </group>
 
   <!-- Run the EEPP node -->
   <node name="EEPP" pkg="path_planning" type="EEPP_node" output="screen"/>
