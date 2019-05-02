@@ -1,5 +1,6 @@
-def plan_path(self, map, alg, alpha):
-    print("planning a path!")
-    paths = 0
-    costs = 0
+from path_planning.Astar import Astar
+#import other algorithms
+def plan_path(map, start, goal, alg, alpha):
+    if alg == "A*":
+        paths, costs = Astar(map, start, goal, alpha)
     return paths, costs

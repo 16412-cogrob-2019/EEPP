@@ -10,13 +10,14 @@ import rospy
 from std_msgs.msg import String
 
 #path planning imports
-from mypackage import plan_path
+from path_planning import plan_path
 
 
 class EEPP_node:
     def __init__(self):
-		self.Algorithm = "A*"
-		self.map = None
+    	self.Algorithm = "A*"
+        self.alpha = 1
+    	self.map = None
         # subscribers
         self.maas_sub = rospy.Subscriber("/maas/poi_data", String, self.maas_callback)
         self.map_sub = rospy.Subscriber("/core/map", String, self.map_callback)
@@ -28,25 +29,30 @@ class EEPP_node:
 
 ############################# Subscriber Callback functions ####################
     def maas_callback(self, data):
-		print("receieved data from maas module")
+        print("receieved data from maas module")
 
-		if self.map == None:
-			print("Error: Map has not yet been recieved!")
-			return
+        if self.map == None:
+        	print("Error: Map has not yet been recieved!")
+        	# return
 
-		message = json.loads(data.data)
+        # message = json.loads(data.data)
+        with open("maas_poi_data.json") as json_file:
+            message = json.load(json_file)
 
-		paths, costs = plan_path(self, map, alg, alpha)
-		data.paths = path
-		data.costs = cost
-		self.publish_paths(data)
+        print(type(message))
+        print(json.dumps(message))
+        paths, costs = plan_path(self.map, (0,0), (1,1), self.Algorithm, self.alpha)
+        message[0]["paths"] = paths
+        message[0]["costs"] = costs
+        self.publish_paths(message)
 
-	def map_callback(self, data):
-		self.map = data
+    def map_callback(self, data):
+        rospy.loginfo("Received map data")
+        self.map = data
 
 ############################# Publisher functions ##############################
-    def publish_paths(self, data):
-	    self.mcts_pub.publish(json.dumps(data))
+    def publish_paths(self, message):
+        self.mcts_pub.publish(json.dumps(message))
 
 
 
@@ -64,8 +70,8 @@ def main():
     rate = rospy.Rate(pub_rate)
     while (not rospy.is_shutdown()):
         # # do some stuff if necessary
-		# print("Publish Points of Interest")
-		# MAAS_instance.publish_points()
+        # print("Publish Points of Interest")
+        # MAAS_instance.publish_points()
 
         # ros sleep (sleep to maintain loop rate)
         rate.sleep()
