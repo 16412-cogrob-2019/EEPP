@@ -8,6 +8,7 @@ import json
 # ros imports
 import rospy
 from std_msgs.msg import String
+from nav_msgs.msg import OccupancyGrid
 
 #path planning imports
 from path_planning import plan_path
@@ -20,37 +21,41 @@ class EEPP_node:
     	self.map = None
         # subscribers
         self.maas_sub = rospy.Subscriber("/maas/poi_data", String, self.maas_callback)
-        self.map_sub = rospy.Subscriber("/core/map", String, self.map_callback)
+        self.map_sub = rospy.Subscriber("/map", OccupancyGrid, self.map_callback)
 
         # publisher
         self.mcts_pub = rospy.Publisher("/mcts/path_data", String, queue_size = 10) # jsonified data
 
 
-
 ############################# Subscriber Callback functions ####################
+    '''
+    Callback Function for when we receive the POI data from the MAAS team.
+    Check that we have map info then plan paths to the POIs.
+    '''
     def maas_callback(self, data):
-        print("receieved data from maas module")
-
+        rospy.loginfo("Received POI data")
         if self.map == None:
-        	print("Error: Map has not yet been recieved!")
-        	# return
+        	rospy.loginfo("Map has not yet been recieved! Unable to plan paths to POIs.")
+        	return
 
-        # message = json.loads(data.data)
-        with open("maas_poi_data.json") as json_file:
-            message = json.load(json_file)
+        message = json.loads(data.data)
 
-        print(type(message))
-        print(json.dumps(message))
         paths, costs = plan_path(self.map, (0,0), (1,1), self.Algorithm, self.alpha)
         message[0]["paths"] = paths
         message[0]["costs"] = costs
         self.publish_paths(message)
 
+    '''
+    Callback Function for when we receive the map from the map_server node. Take the occupancygrid and derive the info we need.
+    '''
     def map_callback(self, data):
-        rospy.loginfo("Received map data")
+        rospy.loginfo("Received map data!")
         self.map = data
 
 ############################# Publisher functions ##############################
+    '''
+    Publish POI data with paths and costs to the MCTS team.
+    '''
     def publish_paths(self, message):
         self.mcts_pub.publish(json.dumps(message))
 
@@ -58,20 +63,21 @@ class EEPP_node:
 
 
 ############################# Main #############################################
+'''
+Motly boilerplate for instantiating the node
+'''
 def main():
     # init ros node
     rospy.init_node('EEPP', anonymous = True)
 
     # class instance
-    MAAS_instance = EEPP_node()
+    EEPP = EEPP_node()
 
     # create ros loop
     pub_rate = 1 # hertz
     rate = rospy.Rate(pub_rate)
     while (not rospy.is_shutdown()):
-        # # do some stuff if necessary
-        # print("Publish Points of Interest")
-        # MAAS_instance.publish_points()
+        # do some stuff if necessary (we only publish reactively in sub callback)
 
         # ros sleep (sleep to maintain loop rate)
         rate.sleep()

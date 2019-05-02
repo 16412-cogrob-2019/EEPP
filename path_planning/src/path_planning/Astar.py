@@ -1,6 +1,6 @@
 def Astar(map, start, goal, alpha):
     print("Running A* with:")
-    print(map)
+    # print(map)
     print(start)
     print(goal)
     print(alpha)

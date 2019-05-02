@@ -1,0 +1,81 @@
+#!/usr/bin/env python
+
+# imports
+import sys
+import numpy as np
+import json
+
+# ros imports
+import rospy
+from std_msgs.msg import String
+
+
+'''
+This node is for testing the EEPP_node.
+It simulates the MAAS node publisher, and the MCTS node subscriber
+'''
+class testing_node:
+    def __init__(self):
+        # subscribers
+        self.maas_pub = rospy.Publisher("/maas/poi_data", String, queue_size = 10 )
+        # publisher
+        self.mcts_sub = rospy.Subscriber("/mcts/path_data", String, self.mcts_callback)
+
+
+############################# Subscriber Callback functions ####################
+    '''
+    Callback Function to simulate the MCTS team recieving our path data. Prints to terminal
+    '''
+    def mcts_callback(self, data):
+        rospy.loginfo("MCTS Receives path data:")
+        message = json.loads(data.data)
+        print(json.dumps(message))#, indent=4, separators=(',',': '))
+
+############################# Publisher functions ##############################
+    '''
+    Simulate POI data coming from the MAAS team
+    '''
+    def publish_points(self):
+        numNodes = 5
+        message = []
+        for i in range(numNodes):
+            node = {}
+            node["poi_id"] = i+1
+            node["reward"] = 1.0
+            # random position in a 10x10m space
+            node["x"] = 10*np.random.random_sample()
+            node["y"] = 10*np.random.random_sample()
+            message.append(node)
+
+        self.maas_pub.publish(json.dumps(message))
+
+
+
+
+############################# Main #############################################
+'''
+Motly boilerplate for instantiating the node
+'''
+def main():
+    # init ros node
+    rospy.init_node('testing_node', anonymous = True)
+
+    # class instance
+    tester = testing_node()
+
+    # create ros loop
+    pub_rate = 0.1 # Send new nodes once every 10 seconds
+    rate = rospy.Rate(pub_rate)
+    while (not rospy.is_shutdown()):
+        # # do some stuff if necessary
+        print("Publishing new points of interest")
+        tester.publish_points()
+
+        # ros sleep (sleep to maintain loop rate)
+        rate.sleep()
+
+if __name__ == '__main__':
+    try:
+        main()
+    except rospy.ROSInterruptException:
+        pass
