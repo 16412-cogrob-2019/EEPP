@@ -4,6 +4,9 @@ def Astar(map, start, goal, alpha):
     print(start)
     print(goal)
     print(alpha)
-    paths = 0
-    costs = 0
-    return paths, costs
+    path = [[0,0,1],
+            [0.1,0.1,2],
+            [0.2,0.2,3],
+            [0.3,0.3,4]]
+    cost = 0
+    return path, cost
