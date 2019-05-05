@@ -19,6 +19,7 @@ class EEPP_node:
     	self.Algorithm = "A*"
         self.alpha = 1
     	self.map = None
+        self.currentPos = (0,0)
         # subscribers
         self.maas_sub = rospy.Subscriber("/maas/poi_data", String, self.maas_callback)
         self.map_sub = rospy.Subscriber("/map", OccupancyGrid, self.map_callback)
@@ -40,9 +41,10 @@ class EEPP_node:
 
         message = json.loads(data.data)
 
-        paths, costs = plan_path(self.map, (0,0), (1,1), self.Algorithm, self.alpha)
-        message[0]["paths"] = paths
-        message[0]["costs"] = costs
+        for idx, node in enumerate(message):
+            path, cost = plan_path(self.map, self.currentPos, (node["x"], node["y"]), self.Algorithm, self.alpha)
+            message[idx]["path"] = path
+            message[idx]["cost"] = cost
         self.publish_paths(message)
 
     '''
