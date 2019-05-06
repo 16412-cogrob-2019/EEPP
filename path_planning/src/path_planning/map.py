@@ -1,5 +1,7 @@
 import numpy as np
-from current import Current
+# import matplotlib.pyplot as plt
+
+import current_types
 
 class Map:
     """docstring for Map"""
@@ -11,7 +13,7 @@ class Map:
         self.origin = map_msg.info.origin
         self.pos = [self.origin.position.x, self.origin.position.y]
         self.grid = np.asarray(self.array, dtype=np.int8).reshape(self.height, self.width)
-        self.current = Current("Sine Waves Horiz", np.zeros_like(self.grid))
+        self.current = current_types.Current("Sine Waves Horiz", np.zeros_like(self.grid,dtype="float"))
         # self.current = self.generate_current(np.zeros_like(self.grid))
 
     def update_grid(self, grid):
@@ -32,3 +34,41 @@ class Map:
         x_cell = p[0]/self.res - self.pos[0]
         y_cell = p[1]/self.res - self.pos[1]
         return self.current.current_x[x_cell, y_cell], self.current.current_y[x_cell, y_cell]
+
+class MapMsg():
+    def __init__(self,info,data):
+        self.info = info
+        self.data = data
+
+class Info():
+    def __init__(self,height,width,res,origin):
+        self.height = height
+        self.width = width
+        self.resolution = res
+        self.origin = origin
+
+class Origin():
+    def __init__(self,position):
+        self.position = position
+
+class Position():
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+
+# p = Position(0,0)
+# o = Origin(p)
+# h = 100
+# w = 100
+# r = .1
+# i = Info(h,w,r,o)
+# d = np.random.rand(w*h)*100
+# mm = MapMsg(i,d)
+# m = Map(mm)
+# x = np.arange(w)
+# y = np.arange(h)
+# c_x = m.current.current_x
+# c_y = m.current.current_y
+# plt.streamplot(x,y,c_x,c_y)
+# plt.show()
+>>>>>>> Stashed changes
