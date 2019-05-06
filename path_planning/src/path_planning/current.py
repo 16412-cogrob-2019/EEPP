@@ -1,4 +1,5 @@
-class Current():
+import numpy as np
+class Current:
     def __init__(self, current_type, grid):
         self.type = current_type
         self.height_cells = grid.shape[1]

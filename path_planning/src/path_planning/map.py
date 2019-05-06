@@ -1,7 +1,7 @@
 import numpy as np
-import current
+from current import Current
 
-class Map():
+class Map:
     """docstring for Map"""
     def __init__(self, map_msg):
         self.array = self.update_grid(map_msg.data)
@@ -14,8 +14,8 @@ class Map():
         self.current = Current("Sine Waves Horiz", np.zeros_like(self.grid))
         # self.current = self.generate_current(np.zeros_like(self.grid))
 
-
     def update_grid(self, grid):
+        grid = list(grid)
         for i,value in enumerate(grid):
             if value < 0:
                 grid[i] = 1
@@ -23,13 +23,12 @@ class Map():
                 grid[i] = value/100.
         return grid
 
-    def risk(p):
+    def risk_at(self,p):
         x_cell = p[0]/self.res - self.pos[0]
         y_cell = p[1]/self.res - self.pos[1]
         return self.grid[x_cell, y_cell]
 
-    def current(p):
+    def current_at(self,p):
         x_cell = p[0]/self.res - self.pos[0]
         y_cell = p[1]/self.res - self.pos[1]
         return self.current.current_x[x_cell, y_cell], self.current.current_y[x_cell, y_cell]
-

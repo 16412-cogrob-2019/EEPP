@@ -9,9 +9,9 @@ import json
 import rospy
 from std_msgs.msg import String
 from nav_msgs.msg import OccupancyGrid
-
+from geometry_msgs.msg import PoseArray, Pose, Quaternion
 #path planning imports
-from path_planning import plan_path
+from path_planning import Map, plan_path, toQuaternion
 
 
 class EEPP_node:
@@ -26,7 +26,7 @@ class EEPP_node:
 
         # publisher
         self.mcts_pub = rospy.Publisher("/mcts/path_data", String, queue_size = 10) # jsonified data
-
+        self.current_pub = rospy.Publisher("/eepp/current_array", PoseArray, queue_size = 10)
 
 ############################# Subscriber Callback functions ####################
     '''
@@ -50,9 +50,31 @@ class EEPP_node:
     '''
     Callback Function for when we receive the map from the map_server node. Take the occupancygrid and derive the info we need.
     '''
-    def map_callback(self, data):
+    def map_callback(self, msg):
         rospy.loginfo("Received map data!")
-        self.map = data
+        self.map = Map(msg)
+        current_message = self.getCurrentmsg()
+        self.current_pub.publish(current_message)
+
+
+    def getCurrentmsg(self):
+        map = self.map
+        pa = PoseArray()
+        pa.header.frame_id = "map"
+        for i in range(map.width):
+            for j in range(map.height):
+                x = i*map.res
+                y = j*map.res
+                p = Pose()
+                p.position.x = float(x) + map.pos[0]
+                p.position.y = float(y) + map.pos[1]
+                p.position.z = 0.0
+
+                cx, cy = map.current.current_x[j,i],map.current.current_y[j,i]
+                yaw = np.arctan2(cy,cx)
+                p.orientation = toQuaternion(yaw)
+                pa.poses.append(p)
+        return pa
 
 ############################# Publisher functions ##############################
     '''
