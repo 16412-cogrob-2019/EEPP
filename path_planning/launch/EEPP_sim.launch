@@ -1,0 +1,31 @@
+<launch>
+  <arg name="map_server" default="true"/>
+  <arg name="test" default="true"/>
+  <arg name="open_rviz" default="true"/>
+
+  <arg name="map_file" default="$(find turtlebot3_navigation)/maps/map.yaml"/>
+
+  <!-- Open the Gazebo Sim -->
+  <include file="$(find turtlebot3_gazebo)/launch/turtlebot3_world.launch"/>
+
+  <!-- Start the Navigation Stack -->
+  <include file="$(find turtlebot3_navigation)/launch/turtlebot3_navigation.launch">
+    <arg name="map_file" value="$(arg map_file)"/>
+    <arg name="open_rviz" value="false" />
+  </include>
+
+  <!-- Run the EEPP node -->
+  <node name="EEPP" pkg="path_planning" type="EEPP_node" output="screen"/>
+
+  <!-- Run the Testing node-->
+  <group if="$(arg test)">
+    <node name="Tester" pkg="path_planning" type="testing_node" output="screen"/>
+  </group>
+
+  <!-- Run rviz -->
+  <group if="$(arg open_rviz)">
+    <node pkg="rviz" type="rviz" name="rviz" required="true"
+          args="-d $(find path_planning)/rviz/grandchallenge.rviz"/>
+  </group>
+
+</launch>
