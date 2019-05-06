@@ -9,7 +9,6 @@ grid_n = 100 # ex: meters
 step = 1
 
 class Node:
-    """A node class for Any Angle Pathfinding"""
     def __init__(self, parent=None, position=None, current=(0, 0)):
         self.parent = parent
         self.position = position
@@ -32,7 +31,7 @@ def line_of_sight(node1, node2, map):
     dy = (y2 - y1)/steps
     
     for i in range(steps):
-        r = map.risk((x1 + dx*i, y1 + dy*i))
+        r = map.risk_at((x1 + dx*i, y1 + dy*i))
         if r == 1: # note to self: alternatively, r > 0.9
             return False
     return True
@@ -44,9 +43,9 @@ def Astar(map, start, goal, alpha):
     print("Alpha:", alpha)
     
     # Create start and end node
-    start_node = Node(None, start, map.current(start))
+    start_node = Node(None, start, map.current_at(start))
     start_node.g = start_node.h = start_node.f = 0
-    goal_node = Node(None, goal, map.current(goal))
+    goal_node = Node(None, goal, map.current_at(goal))
     goal_node.g = goal_node.h = goal_node.f = 0
 
     # Initialize both open and closed list
@@ -61,7 +60,7 @@ def Astar(map, start, goal, alpha):
     start_node.timeToChild = 0.001
     
     def update_node_values(child):
-        child.risk = map.risk(child.position)
+        child.risk = map.risk_at(child.position)
         
         child.timeToChild, child.V_AUV = cost_function(child.parent, child, auv_speed, alpha)
         child.g = child.parent.g + child.timeToChild
@@ -118,7 +117,7 @@ def Astar(map, start, goal, alpha):
             if node_position[0] > grid_m or node_position[0] < 0 or node_position[1] > grid_n or node_position[1] < 0:
                 continue
             # Create new node and add to the children list
-            new_node = Node(current_node, node_position, map.current(node_position))
+            new_node = Node(current_node, node_position, map.current_at(node_position))
             children.append(new_node)
 
         # Now loop through children
@@ -163,7 +162,7 @@ def Astar(map, start, goal, alpha):
 
 ###############################################################################
 # Testing   
-'''
+
 class MapObject(object):
     pass
 def risk(position):
@@ -171,15 +170,15 @@ def risk(position):
         return 1
     return 0
 def current(position):
-    return (1, 1)
+    return (0, 0)
 
 map = MapObject()
-map.risk = risk
-map.current = current
+map.risk_at = risk
+map.current_at = current
 
 paths, costs = Astar(map, (0, 0), (10, 8), 0.5)
 print("Test path:")
 for node in paths:
     print(node.position)
 print("Cost:", costs)
-'''
+
