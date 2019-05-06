@@ -1,5 +1,5 @@
 import numpy as np
-class Current:
+class Current():
     def __init__(self, current_type, grid):
         self.type = current_type
         self.height_cells = grid.shape[1]
@@ -32,7 +32,7 @@ class Current:
             return self.sink_hole(grid)
 
         if current_type == "Source":
-            return self.Source(grid)
+            return self.source(grid)
 
         if current_type == "Right Horiz":
             return self.horizontal_r(grid)
@@ -49,11 +49,11 @@ class Current:
         return grid, np.zeros_like(grid)
 
     def sine_wave_h(self, grid):
-        c_x = grid
-        c_y = np.zeros_like(c_x)
+        c_x = np.zeros_like(grid,dtype="float")
+        c_y = np.zeros_like(c_x,dtype="float")
         for col in range(self.height_cells):
             for row in range(self.width_cells):
-                col_transformed = col/self.width_cells * 6*np.pi
+                col_transformed = float(col)/self.width_cells * 6*np.pi
                 c_x[row, col] = abs(np.sin(col_transformed))
                 c_y[row, col] = np.cos(col_transformed)
         return c_x, c_y
@@ -63,7 +63,7 @@ class Current:
         c_y = np.zeros_like(c_x)
         for col in range(self.height_cells):
             for row in range(self.width_cells):
-                row_transformed = row/self.width_cells * 6*np.pi
+                row_transformed = float(row)/self.width_cells * 6*np.pi
                 c_x[row, col] = np.sin(row_transformed)
                 c_y[row, col] = abs(np.cos(row_transformed))
         return c_x, c_y
@@ -73,7 +73,7 @@ class Current:
         c_y = np.zeros_like(c_x)
         for col in range(self.height_cells):
             for row in range(self.width_cells):
-                col_transformed = col/self.width_cells * 6*np.pi
+                col_transformed = float(col)/self.width_cells * 6*np.pi
                 c_x[row, col] = np.sin(col_transformed)
                 c_y[row, col] = abs(np.cos(col_transformed))
         return c_x, c_y
@@ -83,7 +83,7 @@ class Current:
         c_y = np.zeros_like(c_x)
         for col in range(self.height_cells):
             for row in range(self.width_cells):
-                row_transformed = row/self.width_cells * 6*np.pi
+                row_transformed = float(row)/self.width_cells * 6*np.pi
                 c_x[row, col] = abs(np.sin(row_transformed))
                 c_y[row, col] = np.cos(row_transformed)
         return c_x, c_y
