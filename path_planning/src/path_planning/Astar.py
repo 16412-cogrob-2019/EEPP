@@ -66,7 +66,6 @@ def Astar(map, start, goal, alpha):
         child.timeToChild, child.V_AUV = cost_function(child.parent, child, auv_speed, alpha)
         child.g = child.parent.g + child.timeToChild
 
-        # TODO: modify this heuristic to be settable with alpha
         timeToGoal = heuristic(child, goal_node, auv_speed)
         child.h = timeToGoal
         child.f = child.g + child.h
