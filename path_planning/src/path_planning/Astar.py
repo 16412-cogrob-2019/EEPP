@@ -32,7 +32,7 @@ def line_of_sight(node1, node2, map):
     
     for i in range(steps):
         r = map.risk_at((x1 + dx*i, y1 + dy*i))
-        if r == 1: # note to self: alternatively, r > 0.9
+        if r == 1: # note to self: alternatively, r > 0.9 for tolerance
             return False
     return True
 
@@ -83,7 +83,7 @@ def Astar(map, start, goal, alpha):
         open_list.append(child)    
     
     # Loop until you find the end
-    while len(open_list) > 0:
+    while open_list:
         
         # Get the current node (node with smallest f value i.e. cost-to-go)
         current_node = open_list[0]     
@@ -132,7 +132,7 @@ def Astar(map, start, goal, alpha):
             #Check if child is already in the closed list
             foundInClosed = False            
             for i, closed_node in enumerate(closed_list):
-                if child == closed_node:
+                if child.position == closed_node.position:
                     foundInClosed = True
                     closedIdx = i
                     if child.f > closed_node.f:
@@ -141,7 +141,7 @@ def Astar(map, start, goal, alpha):
             # Check if child is already in the open list
             foundInOpen = False
             for i, open_node in enumerate(open_list):
-                if child == open_node:
+                if child.position == open_node.position:
                     foundInOpen = True
                     openIdx = i
                     if child.f > open_node.f:
@@ -156,7 +156,7 @@ def Astar(map, start, goal, alpha):
             if foundInClosed:
                 closed_list.pop(closedIdx)
             
-            update_vertex(current_node, child)
+            update_vertex(current_node, child) # add extra argument True to apply any angle
     
     return paths, costs
 
@@ -166,11 +166,12 @@ def Astar(map, start, goal, alpha):
 class MapObject(object):
     pass
 def risk(position):
-    if position in [(2, 2), (2, 3), (3, 2), (3, 3)]:
+    (x, y) = position
+    if x >=2 and x<=3 and y>=2 and y<=3:
         return 1
     return 0
 def current(position):
-    return (0, 0)
+    return (2, -3)
 
 map = MapObject()
 map.risk_at = risk

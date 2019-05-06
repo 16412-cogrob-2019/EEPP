@@ -20,8 +20,7 @@ def heuristic(node1, node2, AUV_speed):
     # TODO: make max_current the actual max current
     max_current = 10
     speed_exaggerated = AUV_speed + max_current
-    #time_to_destination = dist(node1, node2)/speed_exaggerated
-    time_to_destination = dist(node1, node2)/AUV_speed
+    time_to_destination = dist(node1, node2)/speed_exaggerated
     return time_to_destination
 
 def cost_function(node1, node2, AUV_speed, alpha):
