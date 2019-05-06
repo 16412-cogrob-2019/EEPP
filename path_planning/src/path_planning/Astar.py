@@ -162,7 +162,7 @@ def Astar(map, start, goal, alpha):
 
 ###############################################################################
 # Testing   
-
+'''
 class MapObject(object):
     pass
 def risk(position):
@@ -181,4 +181,4 @@ print("Test path:")
 for node in paths:
     print(node.position)
 print("Cost:", costs)
-
+'''
