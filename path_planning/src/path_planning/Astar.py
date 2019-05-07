@@ -3,7 +3,7 @@ from utils import *
 import rospy
 from nav_msgs.msg import Odometry
 # TODO: figure out how to do base speed. Currently hardcoded
-auv_speed = 10
+auv_speed = 3.0
 
 class Node:
     def __init__(self, parent=None, position=None, current=(0, 0)):
@@ -30,7 +30,7 @@ def line_of_sight(node1, node2, map):
 
     for i in range(steps):
         r = map.risk_at((x1 + dx*i, y1 + dy*i))
-        if r == 1: # note to self: alternatively, r > 0.9 for tolerance
+        if r == 1.0: # note to self: alternatively, r > 0.9 for tolerance
             return False
     return True
 
@@ -39,7 +39,7 @@ def Astar(map, start, goal, alpha):
     print("Start:", start)
     print("Goal:", goal)
     print("Alpha:", alpha)
-    debug_pub = rospy.Publisher("/eepp/debug", Odometry, queue_size = 10) # jsonified data
+    debug_pub = rospy.Publisher("/eepp/debug", Odometry, queue_size = 1000) # jsonified data
     # Create start and end node
     start_node = Node(None, start, map.current_at(start))
     start_node.g = start_node.h = start_node.f = 0
@@ -94,9 +94,9 @@ def Astar(map, start, goal, alpha):
         open_list.pop(current_index)
         closed_list.append(current_node)
 
-        step = 2.0*map.res
+        step = map.res
         # Found the goal
-        if dist(current_node, goal_node) <= step:
+        if dist(current_node, goal_node) <= 1.5*step:
             path = []
             path_node = current_node
             path_cost = current_node.g

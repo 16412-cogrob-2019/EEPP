@@ -18,7 +18,7 @@ def compute_unit_vector(node1, node2):
 
 def heuristic(node1, node2, AUV_speed):
     # TODO: make max_current the actual max current
-    max_current = 5
+    max_current = 2.0
     speed_exaggerated = AUV_speed + max_current
     time_to_destination = dist(node1, node2)/speed_exaggerated
     return time_to_destination
@@ -57,7 +57,7 @@ def cost_function(node1, node2, AUV_speed, alpha):
     # compute the time it will take to travel from node1 to node2 - handle edge case that 0 speed=inf time
     time = dist(node1,node2)/SpeedInTargetDirection if SpeedInTargetDirection != 0 else 0
     timeToDestination = (time if time > 0  else np.inf)
-    
+
     riskfactor = (1/(1-alpha*node2.risk + 1e-10))
-    
+
     return riskfactor*timeToDestination, SpeedInTargetDirection

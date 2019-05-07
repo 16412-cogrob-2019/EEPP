@@ -1,0 +1,13 @@
+import matplotlib.pyplot as plt
+
+def Astar(map, start, goal, alpha):
+    print("Running A* with:")
+    print(type(map))
+    plt.matshow(map)
+    plt.show()
+    print(start)
+    print(goal)
+    print(alpha)
+    paths = 0
+    costs = 0
+    return paths, costs

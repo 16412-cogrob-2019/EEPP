@@ -53,7 +53,7 @@ class Current():
         c_y = np.zeros_like(c_x,dtype="float")
         for col in range(self.height_cells):
             for row in range(self.width_cells):
-                col_transformed = float(col)/self.width_cells * 6*np.pi
+                col_transformed = float(col)/self.width_cells * 10*np.pi
                 c_x_init = abs(np.sin(col_transformed))
                 c_y_init = np.cos(col_transformed)
                 c_x[row, col] = strength*c_x_init/(c_x_init**2+c_y_init**2)**.5
@@ -65,7 +65,7 @@ class Current():
         c_y = np.zeros_like(c_x)
         for col in range(self.height_cells):
             for row in range(self.width_cells):
-                row_transformed = float(row)/self.width_cells * 6*np.pi
+                row_transformed = float(row)/self.width_cells * 10*np.pi
                 c_x_init = np.sin(row_transformed)
                 c_y_init = abs(np.cos(row_transformed))
                 c_x[row, col] = strength*c_x_init/(c_x_init**2+c_y_init**2)**.5
@@ -106,7 +106,7 @@ class Current():
                 if np.linalg.norm(diff) == 0:
                     amplitude = 0
                 else:
-                    amplitude = strength./np.linalg.norm(diff)
+                    amplitude = strength/np.linalg.norm(diff)
                 c_x[row, col] = -amplitude*np.cos(np.arctan2(diff[1],diff[0]))
                 c_y[row, col] = amplitude*np.sin(np.arctan2(diff[1],diff[0]))
         return c_x, c_y
@@ -121,7 +121,7 @@ class Current():
                 if np.linalg.norm(diff) == 0:
                     amplitude = 0
                 else:
-                    amplitude = strength./np.linalg.norm(diff)
+                    amplitude = strength/np.linalg.norm(diff)
                 c_x[row, col] = amplitude*np.cos(np.arctan2(diff[1],diff[0]))
                 c_y[row, col] = -amplitude*np.sin(np.arctan2(diff[1],diff[0]))
         return c_x, c_y
@@ -136,7 +136,7 @@ class Current():
                 if np.linalg.norm(diff) == 0:
                     amplitude = 0
                 else:
-                    amplitude = strength./np.linalg.norm(diff)
+                    amplitude = strength/np.linalg.norm(diff)
                 c_x[row, col] = amplitude*np.cos(np.arctan2(diff[1],diff[0]))
                 c_y[row, col] = amplitude*np.sin(np.arctan2(diff[1],diff[0]))
         return c_x, c_y
@@ -151,7 +151,7 @@ class Current():
                 if np.linalg.norm(diff) == 0:
                     amplitude = 0
                 else:
-                    amplitude = strength./np.linalg.norm(diff)
+                    amplitude = strength/np.linalg.norm(diff)
                 c_x[row, col] = amplitude*np.sin(np.arctan2(diff[1],diff[0]))
                 c_y[row, col] = amplitude*np.cos(np.arctan2(diff[1],diff[0]))
         return c_x, c_y
@@ -166,7 +166,7 @@ class Current():
                 if np.linalg.norm(diff) == 0:
                     amplitude = 0
                 else:
-                    amplitude = strength./np.linalg.norm(diff)
+                    amplitude = strength/np.linalg.norm(diff)
                 c_x[row, col] = -amplitude*np.sin(np.arctan2(diff[1],diff[0]))
                 c_y[row, col] = -amplitude*np.cos(np.arctan2(diff[1],diff[0]))
         return c_x, c_y
