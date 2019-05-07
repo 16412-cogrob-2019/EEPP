@@ -18,7 +18,7 @@ def compute_unit_vector(node1, node2):
 
 def heuristic(node1, node2, AUV_speed):
     # TODO: make max_current the actual max current
-    max_current = 10
+    max_current = 5
     speed_exaggerated = AUV_speed + max_current
     time_to_destination = dist(node1, node2)/speed_exaggerated
     return time_to_destination
@@ -29,7 +29,7 @@ def cost_function(node1, node2, AUV_speed, alpha):
     V_current = node1.current
 
     #Unit vector from node1 to node2: use only x,y components
-    s = np.array(node2.position)-np.array(node1.position)
+    s = np.array(node2.position) - np.array(node1.position)
     s = s[0:2].flatten()
     ns = np.linalg.norm(s)
     if ns < 1e-10:
@@ -60,4 +60,4 @@ def cost_function(node1, node2, AUV_speed, alpha):
     
     riskfactor = (1/(1-alpha*node2.risk + 1e-10))
     
-    return riskfactor*timeToDestination, V_AUV
+    return riskfactor*timeToDestination, SpeedInTargetDirection

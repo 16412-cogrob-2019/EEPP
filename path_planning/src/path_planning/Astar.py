@@ -3,16 +3,13 @@ from utils import *
 
 # TODO: figure out how to do base speed. Currently hardcoded
 auv_speed = 10
-# TODO: defining grid and step sizes. Currently hardcoded
-grid_m = 100 # ex: meters
-grid_n = 100 # ex: meters
-step = 1
 
 class Node:
     def __init__(self, parent=None, position=None, current=(0, 0)):
         self.parent = parent
         self.position = position
         self.current = current
+        self.speed = 0
         self.g = 0
         self.h = 0
         self.f = 0
@@ -59,10 +56,13 @@ def Astar(map, start, goal, alpha):
     start_node.risk = 0
     start_node.timeToChild = 0.001
     
+    # Step for grid size
+    step = map.res
+    
     def update_node_values(child):
         child.risk = map.risk_at(child.position)
         
-        child.timeToChild, child.V_AUV = cost_function(child.parent, child, auv_speed, alpha)
+        child.timeToChild, child.speed = cost_function(child.parent, child, auv_speed, alpha)
         child.g = child.parent.g + child.timeToChild
 
         timeToGoal = heuristic(child, goal_node, auv_speed)
@@ -80,7 +80,7 @@ def Astar(map, start, goal, alpha):
             else: pass
         else: pass # if just using regular A*, just add directly to open list 
         
-        open_list.append(child)    
+        open_list.append(child)
     
     # Loop until you find the end
     while open_list:
@@ -97,15 +97,18 @@ def Astar(map, start, goal, alpha):
         closed_list.append(current_node)
         
         # Found the goal
-        if dist(current_node, goal_node) < 0.01:
+        if dist(current_node, goal_node) <= step:
             path = []
             path_node = current_node
+            path_cost = current_node.g
             
             while path_node is not None:
-                path.append(path_node)
+                (x, y) = path_node.position
+                path.append((x, y, np.linalg.norm(path_node.speed)))
                 path_node = path_node.parent
-    
-            return path[::-1], path[0].g # Return reversed path
+            
+            # Return reversed path in (x, y, speed), as well as total path cost
+            return path[::-1], path_cost
 
         # Generate children
         children = []
@@ -114,7 +117,7 @@ def Astar(map, start, goal, alpha):
             # Get node position
             node_position = (current_node.position[0] + new_position[0], current_node.position[1] + new_position[1])
             # Make sure within range
-            if node_position[0] > grid_m or node_position[0] < 0 or node_position[1] > grid_n or node_position[1] < 0:
+            if node_position[0] > map.width or node_position[0] < 0 or node_position[1] > map.height or node_position[1] < 0:
                 continue
             # Create new node and add to the children list
             new_node = Node(current_node, node_position, map.current_at(node_position))
@@ -135,8 +138,7 @@ def Astar(map, start, goal, alpha):
                 if child.position == closed_node.position:
                     foundInClosed = True
                     closedIdx = i
-                    if child.f > closed_node.f:
-                        discard = True
+                    discard = True
                         
             # Check if child is already in the open list
             foundInOpen = False
@@ -162,24 +164,24 @@ def Astar(map, start, goal, alpha):
 
 ###############################################################################
 # Testing   
-'''
+'''    
 class MapObject(object):
-    pass
-def risk(position):
-    (x, y) = position
-    if x >=2 and x<=3 and y>=2 and y<=3:
-        return 1
-    return 0
-def current(position):
-    return (2, -3)
+    def risk_at(self, position):
+        (x, y) = position
+        if x >=1 and x<=10 and y>=1 and y<=10:
+            return 1
+        return 0
+    def current_at(self, position):
+        return (-4, -3)
 
 map = MapObject()
-map.risk_at = risk
-map.current_at = current
+map.res = 1
+map.height = 100
+map.width = 100
 
-paths, costs = Astar(map, (0, 0), (10, 8), 0.5)
+paths, costs = Astar(map, (0, 0), (3, 4), 0.5)
 print("Test path:")
-for node in paths:
-    print(node.position)
+for pos in paths:
+    print(pos)
 print("Cost:", costs)
 '''
