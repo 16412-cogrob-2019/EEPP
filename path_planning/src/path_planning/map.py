@@ -7,8 +7,8 @@ class Map:
     """docstring for Map"""
     def __init__(self, map_msg):
         self.array = self.update_grid(map_msg.data)
-        self.height = map_msg.info.height
-        self.width = map_msg.info.width
+        self.height = map_msg.info.height #Ngridpoints
+        self.width = map_msg.info.width #Ngridpoints
         self.res = map_msg.info.resolution #m/cell
         self.origin = map_msg.info.origin
         self.pos = [self.origin.position.x, self.origin.position.y]
@@ -26,14 +26,16 @@ class Map:
         return grid
 
     def risk_at(self,p):
-        x_cell = p[0]/self.res - self.pos[0]
-        y_cell = p[1]/self.res - self.pos[1]
+        x_cell = int((p[0] - self.pos[0])/self.res)
+        y_cell = int((p[1] - self.pos[1])/self.res)
         return self.grid[x_cell, y_cell]
 
     def current_at(self,p):
-        x_cell = p[0]/self.res - self.pos[0]
-        y_cell = p[1]/self.res - self.pos[1]
-        return self.current.current_x[x_cell, y_cell], self.current.current_y[x_cell, y_cell]
+        x_cell = int((p[0] - self.pos[0])/self.res)
+        y_cell = int((p[1] - self.pos[1])/self.res)
+        return 0.0,0.0
+        # return self.current.current_x[x_cell, y_cell], self.current.current_y[x_cell, y_cell]
+
 
 class MapMsg():
     def __init__(self,info,data):
@@ -71,4 +73,3 @@ class Position():
 # c_y = m.current.current_y
 # plt.streamplot(x,y,c_x,c_y)
 # plt.show()
->>>>>>> Stashed changes

@@ -96,12 +96,8 @@ class testing_node:
 
 
         for node in message:
-            goal = getGoalmsg(node[unicode("x")], node[unicode("y")])
-            self.goal_pub.publish(goal)
-            print(node.keys())
             path = getPathmsg(node[unicode("path")])
             self.path_pub.publish(path)
-
 
 ############################# Publisher functions ##############################
     '''
@@ -115,9 +111,12 @@ class testing_node:
             node["poi_id"] = i+1
             node["reward"] = 1.0
             # random position in a 10x10m space
-            node["x"] = 0.5*np.random.random_sample()
-            node["y"] = 0.5*np.random.random_sample()
+            node["x"] = 0.25+0.5*np.random.random_sample()
+            node["y"] = 0.25+0.5*np.random.random_sample()
             message.append(node)
+        goal = getGoalmsg(node[unicode("x")], node[unicode("y")])
+        self.goal_pub.publish(goal)
+
 
         self.maas_pub.publish(json.dumps(message))
 
