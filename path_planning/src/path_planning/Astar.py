@@ -117,7 +117,9 @@ def Astar(map, start, goal, alpha):
             # Get node position
             node_position = (current_node.position[0] + new_position[0], current_node.position[1] + new_position[1])
             # Make sure within range
-            if node_position[0] > map.width or node_position[0] < 0 or node_position[1] > map.height or node_position[1] < 0:
+            within_x_range = node_position[0] > map.width + map.pos[0] or node_position[0] < map.pos[0]
+            within_y_range = node_position[1] > map.height + map.pos[1] or node_position[1] < map.pos[0]
+            if within_x_range or within_y_range:
                 continue
             # Create new node and add to the children list
             new_node = Node(current_node, node_position, map.current_at(node_position))
@@ -164,7 +166,7 @@ def Astar(map, start, goal, alpha):
 
 ###############################################################################
 # Testing   
-'''    
+'''
 class MapObject(object):
     def risk_at(self, position):
         (x, y) = position
@@ -176,8 +178,9 @@ class MapObject(object):
 
 map = MapObject()
 map.res = 1
-map.height = 100
-map.width = 100
+map.height = 10
+map.width = 10
+map.pos = [-2, -2]
 
 paths, costs = Astar(map, (0, 0), (3, 4), 0.5)
 print("Test path:")
