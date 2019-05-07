@@ -10,6 +10,7 @@ class Node:
         self.parent = parent
         self.position = position
         self.current = current
+        self.speed = 0
         self.g = 0
         self.h = 0
         self.f = 0
@@ -95,16 +96,18 @@ def Astar(map, start, goal, alpha):
 
         step = 2.0*map.res
         # Found the goal
-        if dist(current_node, goal_node) <= 1.1*step:
+        if dist(current_node, goal_node) <= step:
             path = []
             path_node = current_node
+            path_cost = current_node.g
 
             while path_node is not None:
                 (x, y) = path_node.position
-                path.append((x, y, 1.0))
+                path.append((x, y, np.linalg.norm(path_node.speed)))
                 path_node = path_node.parent
 
-            return path[::-1], 0.0#path[0].g # Return reversed path
+            # Return reversed path in (x, y, speed), as well as total path cost
+            return path[::-1], path_cost
 
         # Generate children
         children = []
@@ -113,7 +116,9 @@ def Astar(map, start, goal, alpha):
             # Get node position
             node_position = (current_node.position[0] + new_position[0], current_node.position[1] + new_position[1])
             # Make sure within range
-            if node_position[0] > map.width+map.pos[0] or node_position[0] < map.pos[0] or node_position[1] > map.height+map.pos[1] or node_position[1] < map.pos[1]:
+            within_x_range = node_position[0] > map.width + map.pos[0] or node_position[0] < map.pos[0]
+            within_y_range = node_position[1] > map.height + map.pos[1] or node_position[1] < map.pos[0]
+            if within_x_range or within_y_range:
                 continue
             # Create new node and add to the children list
             new_node = Node(current_node, node_position, map.current_at(node_position))
@@ -134,9 +139,8 @@ def Astar(map, start, goal, alpha):
                 if child.position == closed_node.position:
                     foundInClosed = True
                     closedIdx = i
-                    if child.f > closed_node.f:
+                    if child.f > closed_node.f:             #Comment here?
                         discard = True
-
             # Check if child is already in the open list
             foundInOpen = False
             for i, open_node in enumerate(open_list):
@@ -168,22 +172,23 @@ def Astar(map, start, goal, alpha):
 # Testing
 '''
 class MapObject(object):
-    pass
-def risk(position):
-    (x, y) = position
-    if x >=2 and x<=3 and y>=2 and y<=3:
-        return 1
-    return 0
-def current(position):
-    return (2, -3)
+    def risk_at(self, position):
+        (x, y) = position
+        if x >=1 and x<=10 and y>=1 and y<=10:
+            return 1
+        return 0
+    def current_at(self, position):
+        return (-4, -3)
 
 map = MapObject()
-map.risk_at = risk
-map.current_at = current
+map.res = 1
+map.height = 10
+map.width = 10
+map.pos = [-2, -2]
 
-paths, costs = Astar(map, (0, 0), (10, 8), 0.5)
+paths, costs = Astar(map, (0, 0), (3, 4), 0.5)
 print("Test path:")
-for node in paths:
-    print(node.position)
+for pos in paths:
+    print(pos)
 print("Cost:", costs)
 '''

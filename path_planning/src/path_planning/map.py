@@ -1,5 +1,5 @@
 import numpy as np
-# import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 
 import current_types
 
@@ -13,7 +13,7 @@ class Map:
         self.origin = map_msg.info.origin
         self.pos = [self.origin.position.x, self.origin.position.y]
         self.grid = np.asarray(self.array, dtype=np.int8).reshape(self.height, self.width)
-        self.current = current_types.Current("Sine Waves Horiz", np.zeros_like(self.grid,dtype="float"))
+        self.current = current_types.Current("Sine Waves Horiz", 1, np.zeros_like(self.grid,dtype="float"))
         # self.current = self.generate_current(np.zeros_like(self.grid))
 
     def update_grid(self, grid):
@@ -35,7 +35,6 @@ class Map:
         y_cell = int((p[1] - self.pos[1])/self.res)
         return 0.0,0.0
         # return self.current.current_x[x_cell, y_cell], self.current.current_y[x_cell, y_cell]
-
 
 class MapMsg():
     def __init__(self,info,data):
