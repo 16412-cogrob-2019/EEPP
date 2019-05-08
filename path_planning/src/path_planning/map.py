@@ -33,8 +33,7 @@ class Map:
     def current_at(self,p):
         x_cell = int((p[0] - self.pos[0])/self.res)
         y_cell = int((p[1] - self.pos[1])/self.res)
-        return 0.0,0.0
-        # return self.current.current_x[x_cell, y_cell], self.current.current_y[x_cell, y_cell]
+        return self.current.current_x[x_cell, y_cell], self.current.current_y[x_cell, y_cell]
 
 class MapMsg():
     def __init__(self,info,data):

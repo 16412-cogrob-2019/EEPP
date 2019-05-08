@@ -19,10 +19,11 @@ from threading import Lock
 class EEPP_node:
     def __init__(self):
     	self.Algorithm = "A*"
-        self.alpha = 1.00
+        self.alpha = 1.0
     	self.map = None
         # self.currentPos = (-0.5,-0.5)
         self.currentPos = (0.0, 0.0)
+
         # subscribers
         self.maas_sub = rospy.Subscriber("/maas/poi_data", String, self.maas_callback)
         self.map_sub = rospy.Subscriber("/map", OccupancyGrid, self.map_callback)
@@ -86,7 +87,6 @@ class EEPP_node:
     Publish POI data with paths and costs to the MCTS team.
     '''
     def publish_paths(self, message):
-        print(message)
         self.mcts_pub.publish(json.dumps(message))
 
 

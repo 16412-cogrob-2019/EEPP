@@ -47,13 +47,16 @@ def getPathmsg(path):
         marker.header.frame_id = "map"
         marker.header.seq = i
         marker.id = i
+        marker.type = 2 #sphere
         dx = nextx - currentx
         dy = nexty - currenty
         yaw = np.arctan2(dy,dx)
         marker.pose.orientation = toQuaternion(yaw)
 
-        marker.scale.y = 0.05*speed
-        marker.scale.x = 0.05*speed
+        # marker.scale.y = 0.05*speed
+        # marker.scale.x = 0.05*speed
+        marker.scale.x = 0.1
+        marker.scale.y = 0.1
         marker.scale.z = 0.1
 
         marker.color.g = 255.0
@@ -93,8 +96,6 @@ class testing_node:
         rospy.loginfo("MCTS Receives path data:")
         message = json.loads(data.data)
         # print(json.dumps(message))#, indent=4, separators=(',',': '))
-
-
         for node in message:
             path = getPathmsg(node[unicode("path")])
             self.path_pub.publish(path)
@@ -104,20 +105,18 @@ class testing_node:
     Simulate POI data coming from the MAAS team
     '''
     def publish_points(self):
-        numNodes = 5
+        numNodes = 1
         message = []
         for i in range(numNodes):
             node = {}
             node["poi_id"] = i+1
             node["reward"] = 1.0
             # random position in a 10x10m space
-            node["x"] = 0.25+0.5*np.random.random_sample()
-            node["y"] = 0.25+0.5*np.random.random_sample()
+            node["x"] = 1.25+0.5*np.random.random_sample()
+            node["y"] = -0.25-0.5*np.random.random_sample()
             message.append(node)
         goal = getGoalmsg(node[unicode("x")], node[unicode("y")])
         self.goal_pub.publish(goal)
-
-
         self.maas_pub.publish(json.dumps(message))
 
 
