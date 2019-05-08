@@ -13,8 +13,6 @@ from geometry_msgs.msg import PoseArray, Pose, Quaternion
 #path planning imports
 from path_planning import Map, plan_path, toQuaternion
 
-from threading import Lock
-
 
 class EEPP_node:
     def __init__(self):
@@ -31,7 +29,6 @@ class EEPP_node:
         # publisher
         self.mcts_pub = rospy.Publisher("/mcts/path_data", String, queue_size = 10) # jsonified data
         self.current_pub = rospy.Publisher("/eepp/current_array", PoseArray, queue_size = 10)
-        self.mutex = Lock()
 ############################# Subscriber Callback functions ####################
     '''
     Callback Function for when we receive the POI data from the MAAS team.
@@ -39,19 +36,30 @@ class EEPP_node:
     '''
     def maas_callback(self, data):
         rospy.loginfo("Received POI data")
-        self.mutex.acquire()
         if self.map == None:
         	rospy.loginfo("Map has not yet been recieved! Unable to plan paths to POIs.")
         	return
 
         message = json.loads(data.data)
+        robot_node = dict()
+        robot_node["x"] = self.currentPos[0]
+        robot_node["y"] = self.currentPos[1]
+        robot_node["poi_id"] = message[0]["poi_id"]+1
+        robot_node["poi_reward"] = 0.0
+        robot_node["connectivity"]= list(message[0]["poi_id"])
+        robot_node["has_agent"] = 0
+        robot_node["cost"] = 0
+        robot_node["path"] = list()
+        message.append(robot_node)
 
         for idx, node in enumerate(message):
             path, cost = plan_path(self.map, self.currentPos, (node["x"], node["y"]), self.Algorithm, self.alpha)
             message[idx]["path"] = path
             message[idx]["cost"] = cost
+            message[idx]["connectivity"] = list()
+            message[idx]["has_agent"] = -1
+            self.currentPos = (node["x"], node["y"])
         self.publish_paths(message)
-        self.mutex.release()
 
     '''
     Callback Function for when we receive the map from the map_server node. Take the occupancygrid and derive the info we need.

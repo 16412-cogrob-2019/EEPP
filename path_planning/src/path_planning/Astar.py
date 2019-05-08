@@ -60,7 +60,7 @@ def Astar(map, start, goal, alpha):
     def update_node_values(child):
         child.risk = map.risk_at(child.position)
 
-        child.timeToChild, child.V_AUV = cost_function(child.parent, child, auv_speed, alpha)
+        child.timeToChild, child.speed = cost_function(child.parent, child, auv_speed, alpha)
         child.g = child.parent.g + child.timeToChild
 
         timeToGoal = heuristic(child, goal_node, auv_speed)
@@ -76,20 +76,20 @@ def Astar(map, start, goal, alpha):
                 child.parent = parent
                 child = update_node_values(child)
             else: pass
-        else: pass # if just using regular A*, just add directly to open list 
-        
+        else: pass # if just using regular A*, just add directly to open list
+
         open_list.put(child, child.f)
-    
+
     # Loop until you find the end
     while not open_list.empty():
-        
+
         # Get the current node (node with smallest f value i.e. cost-to-go)
         current_node = open_list.pop()
         closed_list.append(current_node.position)
-        
+
         step = map.res
         # Found the goal
-        if dist(current_node, goal_node) <= step/2.0:
+        if dist(current_node, goal_node) <= step:
             path = []
             path_node = current_node
             path_cost = current_node.g
@@ -129,7 +129,7 @@ def Astar(map, start, goal, alpha):
             #Check if child is already in the closed list
             if child.position in closed_list:
                 discard = True
-                        
+
             # Check if child is already in the open list
             if open_list.in_queue(child.position):
                 open_node = open_list.get_node(child.position)
@@ -137,10 +137,10 @@ def Astar(map, start, goal, alpha):
                         discard = True
                 else:
                     open_list.delete(open_node.position)
-                        
+
             if discard:
                 continue
-            
+
             update_vertex(current_node, child) # add extra argument True to apply any angle
             #msg = Odometry()
             #msg.header.frame_id="map"

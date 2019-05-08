@@ -85,12 +85,12 @@ class NodePriorityQueue:
         item = heapq.heappop(self.elements)
         self.element_pos.remove(item[1].position)
         return item[1]
-    
+
     def delete(self, pos):
         self.elements = [e for e in self.elements if e[1].position != pos]
         self.element_pos.remove(pos)
         heapq.heapify(self.elements)
-        
+
     def get_node(self, pos):
         for e in self.elements:
             if e[1].position == pos:
@@ -99,8 +99,7 @@ class NodePriorityQueue:
 
     def in_queue(self, pos):
         return pos in self.element_pos
-   
+
     def __iter__(self):
         for key, node in self.elements:
             yield node
-           
