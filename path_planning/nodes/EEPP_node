@@ -24,10 +24,10 @@ class EEPP_node:
 
         # subscribers
         self.maas_sub = rospy.Subscriber("/maas/poi_data", String, self.maas_callback)
-        self.map_sub = rospy.Subscriber("/map", OccupancyGrid, self.map_callback)
+        self.map_sub = rospy.Subscriber("/tb3_2/map", OccupancyGrid, self.map_callback)
 
         # publisher
-        self.mcts_pub = rospy.Publisher("/mcts/path_data", String, queue_size = 10) # jsonified data
+        self.mcts_pub = rospy.Publisher("/eepp/path_data", String, queue_size = 10) # jsonified data
         self.current_pub = rospy.Publisher("/eepp/current_array", PoseArray, queue_size = 10)
 ############################# Subscriber Callback functions ####################
     '''
