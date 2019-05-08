@@ -1,4 +1,6 @@
 import numpy as np
+import heapq
+import random
 
 """
 Return the distance from node1 to node2
@@ -61,3 +63,44 @@ def cost_function(node1, node2, AUV_speed, alpha):
     riskfactor = (1/(1-alpha*node2.risk + 1e-10))
     
     return riskfactor*timeToDestination, SpeedInTargetDirection
+
+"""
+Priority Queue for use in A*
+"""
+class NodePriorityQueue:
+    def __init__(self):
+        self.elements = []
+        self.maxlength = 0
+        self.element_pos = set()
+
+    def empty(self):
+        return len(self.elements) == 0
+
+    def put(self, node, priority):
+        heapq.heappush(self.elements, ((priority, random.random()), node))
+        self.element_pos.add(node.position)
+        self.maxlength = max(self.maxlength,len(self.elements))
+
+    def pop(self):
+        item = heapq.heappop(self.elements)
+        self.element_pos.remove(item[1].position)
+        return item[1]
+    
+    def delete(self, pos):
+        self.elements = [e for e in self.elements if e[1].position != pos]
+        self.element_pos.remove(pos)
+        heapq.heapify(self.elements)
+        
+    def get_node(self, pos):
+        for e in self.elements:
+            if e[1].position == pos:
+                return e[1]
+        return None
+
+    def in_queue(self, pos):
+        return pos in self.element_pos
+   
+    def __iter__(self):
+        for key, node in self.elements:
+            yield node
+           

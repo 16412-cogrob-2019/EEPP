@@ -46,12 +46,12 @@ def Astar(map, start, goal, alpha):
     goal_node.g = goal_node.h = goal_node.f = 0
 
     # Initialize both open and closed list
-    open_list = []
+    open_list = NodePriorityQueue()
     closed_list = []
 
     # Add the start node
     start_node.V_AUV = np.array((0,0))
-    open_list.append(start_node)
+    open_list.put(start_node, start_node.f)
 
     start_node.risk = 0
     start_node.timeToChild = 0.001
@@ -80,24 +80,17 @@ def Astar(map, start, goal, alpha):
             else: pass
         else: pass # if just using regular A*, just add directly to open list 
         
-        open_list.append(child)
+        open_list.put(child, child.f)
     
     # Loop until you find the end
-    while open_list:
+    while not open_list.empty():
         
         # Get the current node (node with smallest f value i.e. cost-to-go)
-        current_node = open_list[0]     
-        current_index = 0
-        for index, item in enumerate(open_list):
-            if item.f < current_node.f:
-                current_node = item
-                current_index = index
-        # Pop current off open list, add to closed list
-        open_list.pop(current_index)
-        closed_list.append(current_node)
+        current_node = open_list.pop()
+        closed_list.append(current_node.position)
         
         # Found the goal
-        if dist(current_node, goal_node) <= step:
+        if dist(current_node, goal_node) <= step/2.0:
             path = []
             path_node = current_node
             path_cost = current_node.g
@@ -135,30 +128,21 @@ def Astar(map, start, goal, alpha):
             discard = False
             
             #Check if child is already in the closed list
-            foundInClosed = False            
-            for i, closed_node in enumerate(closed_list):
-                if child.position == closed_node.position:
-                    foundInClosed = True
-                    closedIdx = i
-                    discard = True
+            if child.position in closed_list:
+                discard = True
                         
             # Check if child is already in the open list
             foundInOpen = False
-            for i, open_node in enumerate(open_list):
-                if child.position == open_node.position:
-                    foundInOpen = True
-                    openIdx = i
-                    if child.f > open_node.f:
+            if open_list.in_queue(child.position):
+                foundInOpen = True
+                open_node = open_list.get_node(child.position)
+                if child.f > open_node.f:
                         discard = True
+                else:
+                    open_list.delete(open_node.position)
                         
             if discard:
                 continue
-            
-            #remove old occurances of the node, and add the child to the open list
-            if foundInOpen:
-                open_list.pop(openIdx)
-            if foundInClosed:
-                closed_list.pop(closedIdx)
             
             update_vertex(current_node, child) # add extra argument True to apply any angle
     
@@ -170,19 +154,19 @@ def Astar(map, start, goal, alpha):
 class MapObject(object):
     def risk_at(self, position):
         (x, y) = position
-        if x >=1 and x<=10 and y>=1 and y<=10:
+        if x >=5 and x<=20 and y>=5 and y<=20:
             return 1
         return 0
     def current_at(self, position):
-        return (-4, -3)
+        return (3, 0)
 
 map = MapObject()
 map.res = 1
-map.height = 10
-map.width = 10
-map.pos = [-2, -2]
+map.height = 100
+map.width = 100
+map.pos = [-50, -50]
 
-paths, costs = Astar(map, (0, 0), (3, 4), 0.5)
+paths, costs = Astar(map, (-30, -30), (40, 40), 1)
 print("Test path:")
 for pos in paths:
     print(pos)
