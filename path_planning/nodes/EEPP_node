@@ -17,9 +17,9 @@ from path_planning import Map, plan_path, toQuaternion
 class EEPP_node:
     def __init__(self):
     	self.Algorithm = "A*"
-        self.alpha = 1
+        self.alpha = 1.0
     	self.map = None
-        self.currentPos = (0,0)
+        self.currentPos = (-1.5,-0.5)
         # subscribers
         self.maas_sub = rospy.Subscriber("/maas/poi_data", String, self.maas_callback)
         self.map_sub = rospy.Subscriber("/map", OccupancyGrid, self.map_callback)
@@ -61,8 +61,8 @@ class EEPP_node:
         map = self.map
         pa = PoseArray()
         pa.header.frame_id = "map"
-        for i in range(map.width):
-            for j in range(map.height):
+        for i in range(0,map.width,10):
+            for j in range(0,map.height,10):
                 x = i*map.res
                 y = j*map.res
                 p = Pose()

@@ -8,4 +8,5 @@ def plan_path(map, start, goal, alg, alpha):
         paths = None
         costs = None
 
+    print("Finished planning path")
     return paths, costs

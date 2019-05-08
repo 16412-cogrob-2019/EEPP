@@ -7,8 +7,8 @@ class Map:
     """docstring for Map"""
     def __init__(self, map_msg):
         self.array = self.update_grid(map_msg.data)
-        self.height = map_msg.info.height
-        self.width = map_msg.info.width
+        self.height = map_msg.info.height #Ngridpoints
+        self.width = map_msg.info.width #Ngridpoints
         self.res = map_msg.info.resolution #m/cell
         self.origin = map_msg.info.origin
         self.pos = [self.origin.position.x, self.origin.position.y]
@@ -56,18 +56,18 @@ class Position():
         self.x = x
         self.y = y
 
-p = Position(0,0)
-o = Origin(p)
-h = 100
-w = 100
-r = .1
-i = Info(h,w,r,o)
-d = np.random.rand(w*h)*100
-mm = MapMsg(i,d)
-m = Map(mm)
-x = np.arange(w)
-y = np.arange(h)
-c_x = m.current.current_x
-c_y = m.current.current_y
-plt.streamplot(x,y,c_x,c_y)
-plt.show()
+# p = Position(0,0)
+# o = Origin(p)
+# h = 100
+# w = 100
+# r = .1
+# i = Info(h,w,r,o)
+# d = np.random.rand(w*h)*100
+# mm = MapMsg(i,d)
+# m = Map(mm)
+# x = np.arange(w)
+# y = np.arange(h)
+# c_x = m.current.current_x
+# c_y = m.current.current_y
+# plt.streamplot(x,y,c_x,c_y)
+# plt.show()
