@@ -1,7 +1,7 @@
 <launch>
   <arg name="map_server" default="true"/>
   <arg name="test" default="true"/>
-  
+
   <!-- Run the map server -->
   <group if="$(arg map_server)">
     <arg name="map_file" default="$(find path_planning)/map2.yaml"/>

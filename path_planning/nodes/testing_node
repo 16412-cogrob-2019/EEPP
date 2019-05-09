@@ -82,7 +82,7 @@ class testing_node:
         # publisher
         self.maas_pub = rospy.Publisher("/maas/poi_data", String, queue_size = 10 )
         self.goal_pub = rospy.Publisher("/move_base_simple/goal", PoseStamped, queue_size = 10 )
-        self.path_pub = rospy.Publisher("/eepp/path_marker_array", MarkerArray, queue_size = 10 )
+        # self.path_pub = rospy.Publisher("/eepp/path_marker_array", MarkerArray, queue_size = 10 )
         # subscribers
         self.mcts_sub = rospy.Subscriber("/mcts/path_data", String, self.mcts_callback)
 
@@ -97,8 +97,8 @@ class testing_node:
         message = json.loads(data.data)
         # print(json.dumps(message))#, indent=4, separators=(',',': '))
         for node in message:
-            path = getPathmsg(node[unicode("path")])
-            self.path_pub.publish(path)
+            # path = getPathmsg(node[unicode("path")])
+            # self.path_pub.publish(path)
 
 ############################# Publisher functions ##############################
     '''

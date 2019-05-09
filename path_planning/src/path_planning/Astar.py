@@ -1,7 +1,7 @@
 import numpy as np
 from utils import *
-#import rospy
-#from nav_msgs.msg import Odometry
+import rospy
+from nav_msgs.msg import Odometry
 # TODO: figure out how to do base speed. Currently hardcoded
 auv_speed = 3.0
 
@@ -39,7 +39,7 @@ def Astar(map, start, goal, alpha):
     print("Start:", start)
     print("Goal:", goal)
     print("Alpha:", alpha)
-    #debug_pub = rospy.Publisher("/eepp/debug", Odometry, queue_size = 1000) # jsonified data
+    debug_pub = rospy.Publisher("/eepp/debug", Odometry, queue_size = 1000) # jsonified data
     # Create start and end node
     start_node = Node(None, start, map.current_at(start))
     start_node.g = start_node.h = start_node.f = 0
@@ -87,7 +87,7 @@ def Astar(map, start, goal, alpha):
         current_node = open_list.pop()
         closed_list.append(current_node.position)
 
-        step = map.res
+        step = 3*map.res
         # Found the goal
         if dist(current_node, goal_node) <= step:
             path = []
@@ -142,12 +142,12 @@ def Astar(map, start, goal, alpha):
                 continue
 
             update_vertex(current_node, child) # add extra argument True to apply any angle
-            #msg = Odometry()
-            #msg.header.frame_id="map"
-            #msg.pose.pose.position.x = child.position[0]
-            #msg.pose.pose.position.y = child.position[1]
-            #msg.pose.pose.position.z = 0.0
-            #debug_pub.publish(msg)
+            msg = Odometry()
+            msg.header.frame_id="map"
+            msg.pose.pose.position.x = child.position[0]
+            msg.pose.pose.position.y = child.position[1]
+            msg.pose.pose.position.z = 0.0
+            debug_pub.publish(msg)
     return paths, costs
 
 ###############################################################################
