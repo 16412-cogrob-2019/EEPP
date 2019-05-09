@@ -35,11 +35,11 @@ def line_of_sight(node1, node2, map):
     return True
 
 def Astar(map, start, goal, alpha):
-    print("Running A* with:")
-    print("Start:", start)
-    print("Goal:", goal)
-    print("Alpha:", alpha)
-    debug_pub = rospy.Publisher("/eepp/debug", Odometry, queue_size = 1000) # jsonified data
+    # print("Running A* with:")
+    # print("Start:", start)
+    # print("Goal:", goal)
+    # print("Alpha:", alpha)
+    debug_pub = rospy.Publisher("/eepp/debug", Odometry, queue_size = 1000)
     # Create start and end node
     start_node = Node(None, start, map.current_at(start))
     start_node.g = start_node.h = start_node.f = 0

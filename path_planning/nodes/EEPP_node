@@ -20,8 +20,9 @@ class EEPP_node:
     	self.Algorithm = "A*"
         self.alpha = 1.0
     	self.map = None
-        # self.currentPos = (-0.5,-0.5)
-        self.currentPos = (-2.0, -0.5)
+        # self.currentPos = [](-0.5,-0.5)]
+        self.nRobots = 1
+        self.currentPos = [(-2.0, -0.5)]
 
         # subscribers
         self.maas_sub = rospy.Subscriber("/maas/poi_data", String, self.maas_callback)
@@ -38,35 +39,57 @@ class EEPP_node:
     Check that we have map info then plan paths to the POIs.
     '''
     def maas_callback(self, data):
-        rospy.loginfo("Received POI data")
+        rospy.loginfo("EEPP received PoI data from MAAS")
         if self.map == None:
-        	rospy.loginfo("Map has not yet been recieved! Unable to plan paths to POIs.")
+        	rospy.loginfo("EEPP has not recieved map info yet! Unable to plan paths to POIs.")
         	return
 
+        #read in the message from MAAS
         message = json.loads(data.data)
+
+        # Plan paths from the robot to each PoI
         for idx, node in enumerate(message):
             goal = (node["x"], node["y"])
             goal_viz = self.getGoalmsg(goal)
             self.goal_vis_pub.publish(goal_viz)
-            path, cost = plan_path(self.map, self.currentPos, goal, self.Algorithm, self.alpha)
-            print(path)
-            path_viz = self.getPathmsg(path)
-            self.path_vis_pub.publish(path_viz)
-            message[idx]["paths"] = [path]
-            message[idx]["costs"] = [cost]
-            message[idx]["connectivity"] = [message[0]["poi_id"]+1]
+            rospy.loginfo("Planning paths to PoI %i at location (%f, %f)", idx, goal[0], goal[1])
+            message[idx]["connectivity"] = []
             message[idx]["agent_id"] = -1
+            if self.map.risk_at(goal) > 0.1:
+                rospy.loginfo("PoI point is inside an obstacle! Skipping...")
+                message[idx]["paths"][rIdx,:,:] = [[[0.0,0.0,0.0]]]
+                message[idx]["costs"][rIdx,:] = [999999.0]
+                continue
 
-        robot_node = dict()
-        robot_node["x"] = self.currentPos[0]
-        robot_node["y"] = self.currentPos[1]
-        robot_node["poi_id"] = message[0]["poi_id"]+1
-        robot_node["poi_reward"] = 0.0
-        robot_node["connectivity"]= [message[0]["poi_id"]]
-        robot_node["agent_id"] = 0
-        robot_node["costs"] = [0.0]
-        robot_node["paths"] = [[[0.0,0.0,0.0]]]
-        message.append(robot_node)
+            ## Loop over robots and plan a path for each robot
+            for rIdx in range(self.nRobots):
+                start = self.currentPos[rIdx,:]
+                rospy.loginfo("Planning path for agent %i starting at location (%f, %f)", rIdx, start[0], start[1])
+
+                path, cost = plan_path(self.map, self.currentPos, goal, self.Algorithm, self.alpha)
+                rospy.loginfo("Found path! Cost: %f", cost)
+                path_viz = self.getPathmsg(path)
+                self.path_vis_pub.publish(path_viz)
+
+                message[idx]["paths"][rIdx,:,:] = [path]
+                message[idx]["costs"][rIdx,:] = [cost]
+                message[idx]["connectivity"].append(message[0]["poi_id"]+rIdx)
+
+
+        #Then add the robot nodes to the list
+        for rIdx in range(self.nRobots):
+            robot_node = dict()
+            robot_node["x"] = self.currentPos[rIdx,0]
+            robot_node["y"] = self.currentPos[rIdx,1]
+            robot_node["poi_id"] = message[0]["poi_id"]+rIdx+1
+            robot_node["poi_reward"] = 0.0
+            robot_node["connectivity"]= [message[0]["poi_id"]]
+            robot_node["agent_id"] = rIdx
+            robot_node["costs"] = [0.0]
+            robot_node["paths"] = [[[0.0,0.0,0.0]]]
+            message.append(robot_node)
+
+        rospy.loginfo("All paths found. Sending path data to MCTS")
         self.publish_paths(message)
         self.currentPos = (node["x"], node["y"])
 

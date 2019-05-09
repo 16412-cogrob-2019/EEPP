@@ -4,9 +4,7 @@ def plan_path(map, start, goal, alg, alpha):
     if alg == "A*":
         paths, costs = Astar(map, start, goal, alpha)
     else:
-        print("Algorithm not recognized!")
+        print("Path planning algorithm not recognized!")
         paths = None
         costs = None
-
-    print("Finished planning path")
     return paths, costs
