@@ -49,7 +49,6 @@ class EEPP_node:
             goal_viz = self.getGoalmsg(goal)
             self.goal_vis_pub.publish(goal_viz)
             path, cost = plan_path(self.map, self.currentPos, goal, self.Algorithm, self.alpha)
-            print(path)
             path_viz = self.getPathmsg(path)
             self.path_vis_pub.publish(path_viz)
             message[idx]["paths"] = [path]
