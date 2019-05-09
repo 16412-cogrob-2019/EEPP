@@ -205,7 +205,7 @@ def main():
     # init ros node
     rospy.init_node('EEPP', anonymous = True)
     # class instance
-    EEPP = EEPP_node(rospy.get_param('~n_agents'),rospy.get_param('~n_pois'),rospy.get_param('~n_neighbors'))
+    EEPP = EEPP_node(rospy.get_param('n_agents'),rospy.get_param('n_pois'),rospy.get_param('n_neighbors'))
 
     # create ros loop
     pub_rate = 1 # hertz
