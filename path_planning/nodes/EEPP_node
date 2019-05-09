@@ -55,32 +55,34 @@ class EEPP_node:
             rospy.loginfo("Planning paths to PoI %i at location (%f, %f)", idx, goal[0], goal[1])
             message[idx]["connectivity"] = []
             message[idx]["agent_id"] = -1
+            message[idx]["paths"] = []
+            message[idx]["costs"] = []
+
             if self.map.risk_at(goal) > 0.1:
                 rospy.loginfo("PoI point is inside an obstacle! Skipping...")
-                message[idx]["paths"][rIdx,:,:] = [[[0.0,0.0,0.0]]]
-                message[idx]["costs"][rIdx,:] = [999999.0]
+                message[idx]["paths"].append([[0.0,0.0,0.0]])
+                message[idx]["costs"].append(999999.0)
                 continue
 
             ## Loop over robots and plan a path for each robot
             for rIdx in range(self.nRobots):
-                start = self.currentPos[rIdx,:]
+                start = self.currentPos[rIdx]
                 rospy.loginfo("Planning path for agent %i starting at location (%f, %f)", rIdx, start[0], start[1])
-
-                path, cost = plan_path(self.map, self.currentPos, goal, self.Algorithm, self.alpha)
+                path, cost = plan_path(self.map, start, goal, self.Algorithm, self.alpha)
                 rospy.loginfo("Found path! Cost: %f", cost)
                 path_viz = self.getPathmsg(path)
                 self.path_vis_pub.publish(path_viz)
 
-                message[idx]["paths"][rIdx,:,:] = [path]
-                message[idx]["costs"][rIdx,:] = [cost]
+                message[idx]["paths"].append(path)
+                message[idx]["costs"].append(cost)
                 message[idx]["connectivity"].append(message[0]["poi_id"]+rIdx)
 
 
         #Then add the robot nodes to the list
         for rIdx in range(self.nRobots):
             robot_node = dict()
-            robot_node["x"] = self.currentPos[rIdx,0]
-            robot_node["y"] = self.currentPos[rIdx,1]
+            robot_node["x"] = self.currentPos[rIdx][0]
+            robot_node["y"] = self.currentPos[rIdx][1]
             robot_node["poi_id"] = message[0]["poi_id"]+rIdx+1
             robot_node["poi_reward"] = 0.0
             robot_node["connectivity"]= [message[0]["poi_id"]]
