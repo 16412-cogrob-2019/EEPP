@@ -87,7 +87,7 @@ def Astar(map, start, goal, alpha):
         current_node = open_list.pop()
         closed_list.append(current_node.position)
 
-        step = 3*map.res
+        step = map.res
         # Found the goal
         if dist(current_node, goal_node) <= step:
             path = []
