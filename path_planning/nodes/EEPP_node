@@ -18,18 +18,18 @@ from mission_controller.msg import ActivityRequest, Waypoint, Plan
 class EEPP_node:
     def __init__(self, n_agents, n_pois, n_neighbors):
     	self.Algorithm = "A*"
-        self.alpha = 1.0
+        self.alpha = 1.0 #1.0
     	self.map = None
         # self.currentPos = [](-0.5,-0.5)]
         self.nRobots = n_agents
-        self.currentPos = [(-2.0, -0.5)]
+        self.currentPos = [(0.0, 0.0)] #[(-2.0, -0.5)]
 
         self.nPoIs = n_pois
         self.nNeighbors = n_neighbors
 
         # subscribers
         self.maas_sub = rospy.Subscriber("/maas/poi_data", String, self.maas_callback)
-        self.map_sub = rospy.Subscriber("/map", OccupancyGrid, self.map_callback)
+        self.map_sub = rospy.Subscriber("tb3_1/map", OccupancyGrid, self.map_callback)
 
         # publishers
         self.mcts_pub = rospy.Publisher("/eepp/path_data", String, queue_size = 10) # jsonified data
@@ -54,7 +54,8 @@ class EEPP_node:
 
         # Plan paths from the robot to each PoI
         for idx, node in enumerate(message):
-            goal = (node["x"], node["y"])
+            #goal = (node["x"], node["y"])
+            goal = (0.08, -0.89)
             goal_viz = self.getGoalmsg(goal)
             self.goal_vis_pub.publish(goal_viz)
             rospy.loginfo("Planning paths to PoI %i at location (%f, %f)", idx, goal[0], goal[1])
@@ -65,9 +66,9 @@ class EEPP_node:
 
             if self.map.risk_at(goal) > 0.1:
                 rospy.loginfo("PoI point is inside an obstacle! Skipping...")
-                message[idx]["paths"].append([[0.0,0.0,0.0]])
-                message[idx]["costs"].append(999999.0)
-                continue
+                # message[idx]["paths"].append([[0.0,0.0,0.0]])
+                # message[idx]["costs"].append(999999.0)
+                #continue
 
             ## Loop over robots and plan a path for each robot
             for rIdx in range(self.nRobots):
@@ -97,6 +98,7 @@ class EEPP_node:
             message.append(robot_node)
 
         rospy.loginfo("All paths found. Sending path data to MCTS")
+        print(message)
         self.publish_paths(message)
         self.currentPos = (node["x"], node["y"])
 
@@ -203,6 +205,7 @@ class EEPP_node:
         activity.plns.append(p)
         activity.activity_id = 0
         activity.activity_name = "test"
+        print(activity)
         self.activity_pub.publish(activity)
 
 

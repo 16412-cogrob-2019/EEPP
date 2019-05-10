@@ -26,10 +26,12 @@ def line_of_sight(node1, node2, map):
     (x2, y2) = node2.position
     
     # TODO: steps can be parameterized maybe
-    steps = 1 + int(abs(x2 - x1)) # integer number of horizontal steps
+    dx = x2-x1
+    dy = y2-y1
+    steps = 1 + int(max(abs(dx),abs(dy))) # integer number of horizontal steps
 
-    dx = (x2 - x1)/steps
-    dy = (y2 - y1)/steps
+    dx = dx/steps
+    dy = dy/steps
 
     for i in range(steps):
         r = map.risk_at((x1 + dx*i, y1 + dy*i))
@@ -75,7 +77,7 @@ def Astar(map, start, goal, alpha):
         child.f = child.g + child.h
         return child
 
-    def update_vertex(current_node, child, use_any_angle=False):
+    def update_vertex(current_node, child, use_any_angle=True):
         if use_any_angle:
             parent = current_node.parent
             if parent and line_of_sight(parent, child, map):

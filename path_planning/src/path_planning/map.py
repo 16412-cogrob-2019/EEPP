@@ -43,7 +43,8 @@ class Map:
         return x_cell, y_cell
 
     def risk_at(self, p, use_blur = False):
-        x_cell, y_cell = self.get_cell_pos(p)
+        y_cell, x_cell = self.get_cell_pos(p)
+        #x_cell, y_cell = self.get_cell_pos(p)
         return self.risk[x_cell, y_cell]
 
     def current_at(self, p):
