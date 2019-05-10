@@ -1,11 +1,12 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import scipy.ndimage
 
 import current_types
 
 class Map:
     """docstring for Map"""
-    def __init__(self, map_msg):
+    def __init__(self, map_msg, add_blur=False):
         self.array = self.update_grid(map_msg.data)
         self.height = map_msg.info.height #Ngridpoints
         self.width = map_msg.info.width #Ngridpoints
@@ -13,6 +14,7 @@ class Map:
         self.origin = map_msg.info.origin
         self.pos = [self.origin.position.x, self.origin.position.y]
         self.grid = np.asarray(self.array, dtype=np.int8).reshape(self.height, self.width)
+        self.risk = self.get_risk_field(self.grid, add_blur)
         self.current = current_types.Current("Sine Waves Horiz", 1, np.zeros_like(self.grid,dtype="float"))
         # self.current = self.generate_current(np.zeros_like(self.grid))
 
@@ -24,15 +26,29 @@ class Map:
             else:
                 grid[i] = value/100.
         return grid
-
-    def risk_at(self,p):
+    
+    def get_risk_field(self, grid, add_blur):
+        if add_blur:
+            std_dev = 1.5
+            scaling = 2
+            sigma = (std_dev/self.res, std_dev/self.res)
+            blurred_grid = scipy.ndimage.gaussian_filter(grid.astype(float), sigma, mode='reflect', cval=0.0, truncate=4.0)
+            blurred_grid = np.clip(blurred_grid*scaling, 0, 1)
+            return np.maximum(blurred_grid, grid)
+        else:
+            return grid
+        
+    def get_cell_pos(self, p):
         x_cell = int((p[0] - self.pos[0])/self.res)
         y_cell = int((p[1] - self.pos[1])/self.res)
-        return self.grid[x_cell, y_cell]
+        return x_cell, y_cell
 
-    def current_at(self,p):
-        x_cell = int((p[0] - self.pos[0])/self.res)
-        y_cell = int((p[1] - self.pos[1])/self.res)
+    def risk_at(self, p, use_blur = False):
+        x_cell, y_cell = self.get_cell_pos(p)
+        return self.risk[x_cell, y_cell]
+
+    def current_at(self, p):
+        x_cell, y_cell = self.get_cell_pos(p)
         return self.current.current_x[x_cell, y_cell], self.current.current_y[x_cell, y_cell]
 
 class MapMsg():

@@ -109,9 +109,9 @@ def Astar(map, start, goal, alpha):
             # Get node position
             node_position = (current_node.position[0] + new_position[0], current_node.position[1] + new_position[1])
             # Make sure within range
-            within_x_range = node_position[0] > map.width + map.pos[0] or node_position[0] < map.pos[0]
-            within_y_range = node_position[1] > map.height + map.pos[1] or node_position[1] < map.pos[0]
-            if within_x_range or within_y_range:
+            not_in_x_range = node_position[0] >= map.width + map.pos[0] or node_position[0] < map.pos[0]
+            not_in_y_range = node_position[1] >= map.height + map.pos[1] or node_position[1] < map.pos[0]
+            if not_in_x_range or not_in_y_range:
                 continue
             # Create new node and add to the children list
             new_node = Node(current_node, node_position, map.current_at(node_position))
@@ -142,35 +142,12 @@ def Astar(map, start, goal, alpha):
                 continue
 
             update_vertex(current_node, child) # add extra argument True to apply any angle
+            
             msg = Odometry()
             msg.header.frame_id="map"
             msg.pose.pose.position.x = child.position[0]
             msg.pose.pose.position.y = child.position[1]
             msg.pose.pose.position.z = 0.0
             debug_pub.publish(msg)
+            
     return paths, costs
-
-###############################################################################
-# Testing
-'''
-class MapObject(object):
-    def risk_at(self, position):
-        (x, y) = position
-        if x >=0 and x<=20 and y>=0 and y<=20:
-            return 1
-        return 0
-    def current_at(self, position):
-        return (-1, 1)
-
-map = MapObject()
-map.res = 1
-map.height = 100
-map.width = 100
-map.pos = [-50, -50]
-
-paths, costs = Astar(map, (-30, -30), (40, 40), 1)
-print("Test path:")
-for pos in paths:
-    print(pos)
-print("Cost:", costs)
-'''
