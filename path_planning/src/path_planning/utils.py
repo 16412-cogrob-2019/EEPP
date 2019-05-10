@@ -64,6 +64,15 @@ def cost_function(node1, node2, AUV_speed, alpha):
 
     return riskfactor*timeToDestination, SpeedInTargetDirection
 
+def in_tree(node, tree, step):
+    if tree:
+        root = tree
+        while root is not None:
+            if dist(node, root) <= step/2.0:
+                return root
+            root = root.parent
+    return False
+
 """
 Priority Queue for use in A*
 """
@@ -103,3 +112,4 @@ class NodePriorityQueue:
     def __iter__(self):
         for key, node in self.elements:
             yield node
+
