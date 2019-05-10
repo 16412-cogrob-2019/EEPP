@@ -25,7 +25,7 @@ class Map:
             else:
                 grid[i] = value/100.
         return grid
-    
+
     def get_risk_field(self, grid, add_blur):
         if add_blur:
             std_dev = 1.5
@@ -36,7 +36,7 @@ class Map:
             return np.maximum(blurred_grid, grid)
         else:
             return grid
-        
+
     def get_cell_pos(self, p):
         x_cell = int((p[0] - self.pos[0])/self.res)
         y_cell = int((p[1] - self.pos[1])/self.res)

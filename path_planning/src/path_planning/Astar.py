@@ -1,9 +1,9 @@
 import numpy as np
 from utils import *
-#import rospy
-#from nav_msgs.msg import Odometry
+import rospy
+from nav_msgs.msg import Odometry
 
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 
 # TODO: figure out how to do base speed. Currently hardcoded
 auv_speed = 10.0
@@ -24,7 +24,7 @@ class Node:
 def line_of_sight(node1, node2, map):
     (x1, y1) = node1.position
     (x2, y2) = node2.position
-
+    
     # TODO: steps can be parameterized maybe
     steps = 1 + int(abs(x2 - x1)) # integer number of horizontal steps
 
@@ -42,16 +42,16 @@ def Astar(map, start, goal, alpha):
     print("Start:", start)
     print("Goal:", goal)
     print("Alpha:", alpha)
-    #debug_pub = rospy.Publisher("/eepp/debug", Odometry, queue_size = 1000) # jsonified data
+    debug_pub = rospy.Publisher("/eepp/debug", Odometry, queue_size = 1000) # jsonified data
 
     # Create start and end node
     start_node = Node(None, start, map.current_at(start))
     start_node.g = start_node.h = start_node.f = 0
     goal_node = Node(None, goal, map.current_at(goal))
     goal_node.g = goal_node.h = goal_node.f = 0
-    plt.plot(start_node.position[0], start_node.position[1], "g.")
-    plt.plot(goal_node.position[0], goal_node.position[1], "r.")
-    plt.pause(.0001)
+    # plt.plot(start_node.position[0], start_node.position[1], "g.")
+    # plt.plot(goal_node.position[0], goal_node.position[1], "r.")
+    # plt.pause(.0001)
 
     # Initialize both open and closed list
     open_list = NodePriorityQueue()
@@ -162,35 +162,34 @@ def Astar(map, start, goal, alpha):
 
             update_vertex(current_node, child) # add extra argument True to apply any angle
 
-            # msg = Odometry()
-            # msg.header.frame_id="map"
-            # msg.pose.pose.position.x = child.position[0]
-            # msg.pose.pose.position.y = child.position[1]
-            # msg.pose.pose.position.z = 0.0
-            # debug_pub.publish(msg)
+            msg = Odometry()
+            msg.header.frame_id="map"
+            msg.pose.pose.position.x = child.position[0]
+            msg.pose.pose.position.y = child.position[1]
+            msg.pose.pose.position.z = 0.0
+            debug_pub.publish(msg)
 
     return paths, costs
 
 ###############################################################################
 # Testing
-class MapObject(object):
-    def risk_at(self, position):
-        (x, y) = position
-        if x >=0 and x<=20 and y>=0 and y<=20:
-            return 1
-        return 0
-    def current_at(self, position):
-        return (-1, 1)
+# class MapObject(object):
+#     def risk_at(self, position):
+#         (x, y) = position
+#         if x >=0 and x<=20 and y>=0 and y<=20:
+#             return 1
+#         return 0
+#     def current_at(self, position):
+#         return (-1, 1)
 
-map = MapObject()
-map.res = 1
-map.height = 100
-map.width = 100
-map.pos = [-50, -50]
-
-paths, costs = Astar(map, (-30, -30), (40, 40), 1)
-print("Test path:")
-for pos in paths:
-    print(pos)
-print("Cost:", costs)
-
+# map = MapObject()
+# map.res = 1
+# map.height = 100
+# map.width = 100
+# map.pos = [-50, -50]
+#
+# paths, costs = Astar(map, (-30, -30), (40, 40), 1)
+# print("Test path:")
+# for pos in paths:
+#     print(pos)
+# print("Cost:", costs)

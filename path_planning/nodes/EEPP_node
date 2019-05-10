@@ -13,7 +13,7 @@ from geometry_msgs.msg import PoseArray, Pose, Quaternion
 from visualization_msgs.msg import Marker, MarkerArray
 #path planning imports
 from path_planning import Map, plan_path, toQuaternion
-
+from mission_controller.msg import ActivityRequest, Waypoint, Plan
 
 class EEPP_node:
     def __init__(self, n_agents, n_pois, n_neighbors):
@@ -33,6 +33,8 @@ class EEPP_node:
 
         # publishers
         self.mcts_pub = rospy.Publisher("/eepp/path_data", String, queue_size = 10) # jsonified data
+        self.activity_pub = rospy.Publisher("/activity/post", ActivityRequest, queue_size = 10) # jsonified data
+
         self.current_pub = rospy.Publisher("/eepp/current_array", PoseArray, queue_size = 10)
         self.goal_vis_pub = rospy.Publisher("/eepp/goal_marker", Marker, queue_size = 10 )
         self.path_vis_pub = rospy.Publisher("/eepp/path_marker_array", MarkerArray, queue_size = 10 )
@@ -192,7 +194,16 @@ class EEPP_node:
     Publish POI data with paths and costs to the MCTS team.
     '''
     def publish_paths(self, message):
-        self.mcts_pub.publish(json.dumps(message))
+        activity = ActivityRequest()
+        p = Plan()
+        for pt in message[0]["paths"][0]:
+            wp = Waypoint()
+            wp.x, wp.y, wp.vel = pt
+            p.wypts.append(wp)
+        activity.plns.append(p)
+        activity.activity_id = 0
+        activity.activity_name = "test"
+        self.activity_pub.publish(activity)
 
 
 

@@ -1,6 +1,9 @@
 <launch>
   <arg name="map_server" default="true"/>
   <arg name="test" default="true"/>
+  <param name="n_agents" value="1"/>
+  <param name="n_pois" value="1"/>
+  <param name="n_neighbors" value="0"/>
 
   <!-- Run the map server -->
   <group if="$(arg map_server)">
