@@ -66,11 +66,14 @@ def cost_function(node1, node2, AUV_speed, alpha):
 
 def in_tree(node, tree, step):
     if tree:
-        root = tree
-        while root is not None:
+        check = [tree]
+        while len(check):
+            root = check.pop(0)
             if dist(node, root) <= step/2.0:
                 return root
-            root = root.parent
+            for child in root.child:
+                if child is not None:
+                    check.append(child)
     return False
 
 """

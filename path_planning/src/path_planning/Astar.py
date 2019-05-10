@@ -6,7 +6,7 @@ from utils import *
 import matplotlib.pyplot as plt
 
 # TODO: figure out how to do base speed. Currently hardcoded
-auv_speed = 3.0
+auv_speed = 10.0
 
 class Node:
     def __init__(self, parent=None, position=None, current=(0, 0)):
@@ -88,6 +88,7 @@ def Astar(map, start, goal, alpha):
         open_list.put(child, child.f)
 
     # Loop until you find the end
+    i = 10
     while not open_list.empty():
 
         # Get the current node (node with smallest f value i.e. cost-to-go)
@@ -98,7 +99,8 @@ def Astar(map, start, goal, alpha):
 
         # Found the goal
         if dist(current_node, goal_node) <= step:
-            path = []
+            (x,y) = goal_node.position
+            path = [(x,y,np.linalg.norm(goal_node.speed))]
             path_node = current_node
             path_cost = current_node.g
 
@@ -150,19 +152,22 @@ def Astar(map, start, goal, alpha):
             if discard:
                 continue
 
-            cn = current_node.position
-            nn = child.position
-            plt.plot([nn[0]],[nn[1]],'.')
-            plt.pause(0.0001)
+            # if i % 10 == 0:
+            #     cn = current_node.position
+            #     nn = child.position
+            #     plt.plot([nn[0]],[nn[1]],'.')
+            #     plt.pause(0.0001)
+
+            # i += 1
 
             update_vertex(current_node, child) # add extra argument True to apply any angle
 
-            msg = Odometry()
-            msg.header.frame_id="map"
-            msg.pose.pose.position.x = child.position[0]
-            msg.pose.pose.position.y = child.position[1]
-            msg.pose.pose.position.z = 0.0
-            debug_pub.publish(msg)
+            # msg = Odometry()
+            # msg.header.frame_id="map"
+            # msg.pose.pose.position.x = child.position[0]
+            # msg.pose.pose.position.y = child.position[1]
+            # msg.pose.pose.position.z = 0.0
+            # debug_pub.publish(msg)
 
     return paths, costs
 

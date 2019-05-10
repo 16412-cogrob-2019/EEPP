@@ -1,15 +1,16 @@
 import numpy as np
 from utils import *
+import time
 #import rospy
 #from nav_msgs.msg import Odometry
 
 import matplotlib.pyplot as plt
 
 # TODO: figure out how to do base speed. Currently hardcoded
-auv_speed = 3.0
+auv_speed = 10.0
 
 class Node:
-    def __init__(self, parent=None, child=None, position=None, current=(0, 0)):
+    def __init__(self, parent=None, child=[None], position=None, current=(0, 0)):
         self.parent = parent
         self.child = child
         self.position = position
@@ -46,9 +47,9 @@ def LPAStar(map1, start, goal, alpha, prev_tree):
     #debug_pub = rospy.Publisher("/eepp/debug", Odometry, queue_size = 1000) # jsonified data
 
     # Create start and end node
-    start_node = Node(None, None, start, map1.current_at(start))
+    start_node = Node(None, [None], start, map1.current_at(start))
     start_node.g = start_node.h = start_node.f = 0
-    goal_node = Node(None, None, goal, map1.current_at(goal))
+    goal_node = Node(None, [None], goal, map1.current_at(goal))
     goal_node.g = goal_node.h = goal_node.f = 0
     plt.plot(start_node.position[0], start_node.position[1], "g.")
     plt.plot(goal_node.position[0], goal_node.position[1], "r.")
@@ -63,13 +64,16 @@ def LPAStar(map1, start, goal, alpha, prev_tree):
     open_list.put(goal_node, goal_node.f)
 
     goal_node.risk = map1.risk_at(goal_node.position)
+    if goal_node.risk > 0:
+        print "This is an obstacle!"
+        return None
     # goal_node.timeToChild = 0.001
 
     def update_node_values(parent):
         parent.risk = map1.risk_at(parent.position)
 
-        time_to_child, parent.child.V_AUV = cost_function(parent, parent.child, auv_speed, alpha)
-        parent.g = parent.child.g + time_to_child
+        time_to_child, parent.child[-1].V_AUV = cost_function(parent, parent.child[-1], auv_speed, alpha)
+        parent.g = parent.child[-1].g + time_to_child
 
         time_to_goal = heuristic(parent, start_node, auv_speed)
         parent.h = time_to_goal
@@ -78,17 +82,17 @@ def LPAStar(map1, start, goal, alpha, prev_tree):
 
     def update_vertex(current_node, parent, use_any_angle=False):
         if use_any_angle:
-            child = current_node.child
+            child = current_node.child[-1]
             if child and line_of_sight(parent, child, map1):
                 # New f, g, and h values
-                child.parent = parent
-                parent.child = child
+                # child.parent = parent
+                parent.child.append(child)
                 parent = update_node_values(parent)
             else: pass
         else: pass # if just using regular A*, just add directly to open list
 
         open_list.put(parent, parent.f)
-
+    i = 0
     # Loop until you find the end
     while not open_list.empty():
 
@@ -101,21 +105,64 @@ def LPAStar(map1, start, goal, alpha, prev_tree):
         # Found the goal
 
         tree_node = in_tree(current_node, prev_tree, step)
-        if dist(current_node, start_node) <= step/2.0 or tree_node:
-            if tree_node:
-                current_node.parent = tree_node
-            (x,y) = goal_node.position
-            path = [(x,y,np.linalg.norm(goal_node.speed))]
+        # if tree_node:
+        #     path = []
+        #     path_node = prev_tree
+        #     path_cost = prev_tree.g
+
+        #     while path_node is not None:
+        #         ()
+
+        if dist(current_node, start_node) <= step/2.0 or tree_node != False:
+            path = []
+
+
+
+            # (x,y) = goal_node.position
+            # path = [(x,y,np.linalg.norm(goal_node.speed))]
+
+            if tree_node != False:
+                path_node = tree_node
+
+                while path_node is not None:
+                    # print path_node
+                    # print path_node
+                    (x, y) = path_node.position
+                    path.append((x, y, np.linalg.norm(path_node.speed)))
+                    path_node = path_node.parent
+                    # temp.parent = path_node
+                    # path_node = temp
+                path.reverse()
+                tree_node.child.append(current_node)
+                ret_node = prev_tree
+
+            else:
+                if prev_tree is not None:
+                    prev_tree.child.append(current_node)
+                    current_node.parent = prev_tree
+                    ret_node = prev_tree
+                else:
+                    ret_node = current_node
+                path = []
+
             path_node = current_node
             path_cost = current_node.g
-
             while path_node is not None:
+                # print path_node
+                # print path_node
                 (x, y) = path_node.position
                 path.append((x, y, np.linalg.norm(path_node.speed)))
-                path_node = path_node.parent
+                temp = path_node.child[-1]
+                if temp is not None:
+                    temp.parent = path_node
+                path_node = temp
+
+            # (x,y) = start_node.position
+            # path.append((x,y,np.linalg.norm(start_node.speed)))
 
             # Return reversed path in (x, y, speed), as well as total path cost
-            return path[::-1], path_cost
+
+            return path, path_cost, ret_node
 
 
         # Generate children
@@ -130,19 +177,16 @@ def LPAStar(map1, start, goal, alpha, prev_tree):
             if within_x_range or within_y_range:
                 continue
             # Create new node and add to the children list
-            new_node = Node(None, current_node, node_position, map1.current_at(node_position))
+            new_node = Node(None, [current_node], node_position, map1.current_at(node_position))
             # children.append(new_node)
-            cn = current_node.position
-            nn = new_node.position
-            plt.plot([nn[0]],[nn[1]],'.')
-            plt.pause(0.0001)
+
         # # Now loop through children
         # for child in children:
 
             # Create the f, g, and h values
             new_node = update_node_values(new_node)
-            current_node.parent = new_node
-
+            # current_node.parent = new_node
+            # print current_node, new_node
             # if we find the child on either the open or closed list **with a better cost** we discard the child
             discard = False
 
@@ -161,6 +205,14 @@ def LPAStar(map1, start, goal, alpha, prev_tree):
             if discard:
                 continue
 
+            # if i % 1 == 0:
+            #     cn = current_node.position
+            #     nn = new_node.position
+            #     plt.plot([nn[0]],[nn[1]],'.')
+            #     plt.pause(0.0001)
+
+            # i += 1
+
             update_vertex(current_node, new_node) # add extra argument True to apply any angle
             #msg = Odometry()
             #msg.header.frame_id="map1"
@@ -168,7 +220,8 @@ def LPAStar(map1, start, goal, alpha, prev_tree):
             #msg.pose.pose.position.y = child.position[1]
             #msg.pose.pose.position.z = 0.0
             #debug_pub.publish(msg)
-    return paths, costs
+    print "No path found"
+    return None
 
 ###############################################################################
 # Testing
@@ -188,9 +241,35 @@ map1.height = 100
 map1.width = 100
 map1.pos = [-50, -50]
 
-paths, costs = LPAStar(map1, (-30, -30), (40, 40), 1, None)
-print("Test path:")
-for pos in paths:
-    print(pos)
-print("Cost:", costs)
+start = (-30, -30)
+end = (40, 40)
+
+start_time = time.time()
+ans = LPAStar(map1, start, end, 1, None)
+plt.clf()
+if ans is not None:
+    path, cost, tree = ans
+    print "Total time 1st run: ", time.time() - start_time
+    plt.plot(start[0], start[1], 'g.')
+    plt.plot(end[0], end[1], 'r.')
+    for p in range(1, len(path)):
+        plt.plot([path[p-1][0],path[p][0]],[path[p-1][1],path[p][1]],'b-')
+        plt.pause(.0001)
+# plt.show()
+for i in range(2,11):
+    start_time = time.time()
+    ans = LPAStar(map1, start, tuple((np.random.rand(2)*70-30).astype("int")), 1, tree)
+    if ans is not None:
+        path, cost, tree = ans
+        th = "nd" if i == 2 else "rd" if i == 3 else "th"
+        print "Total time %d"%i,th," run: ", time.time() - start_time
+        for p in range(1, len(path)):
+            plt.plot([path[p-1][0],path[p][0]],[path[p-1][1],path[p][1]],'b-')
+            plt.pause(.0001)
+plt.show()
+
+# print("Test path:")
+# for pos in path:
+#     print(pos)
+# print("Cost:", cost)
 
