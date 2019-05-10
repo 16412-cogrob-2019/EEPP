@@ -16,7 +16,6 @@ class Map:
         self.grid = np.asarray(self.array, dtype=np.int8).reshape(self.height, self.width)
         self.risk = self.get_risk_field(self.grid, add_blur)
         self.current = current_types.Current("Sine Waves Horiz", 1, np.zeros_like(self.grid,dtype="float"))
-        # self.current = self.generate_current(np.zeros_like(self.grid))
 
     def update_grid(self, grid):
         grid = list(grid)
@@ -71,19 +70,3 @@ class Position():
     def __init__(self, x, y):
         self.x = x
         self.y = y
-
-# p = Position(0,0)
-# o = Origin(p)
-# h = 100
-# w = 100
-# r = .1
-# i = Info(h,w,r,o)
-# d = np.random.rand(w*h)*100
-# mm = MapMsg(i,d)
-# m = Map(mm)
-# x = np.arange(w)
-# y = np.arange(h)
-# c_x = m.current.current_x
-# c_y = m.current.current_y
-# plt.streamplot(x,y,c_x,c_y)
-# plt.show()
