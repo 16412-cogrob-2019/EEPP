@@ -1,7 +1,7 @@
 import numpy as np
 from utils import *
 import time
-#import rospy
+import rospy
 from nav_msgs.msg import Odometry
 
 # import matplotlib.pyplot as plt
@@ -37,17 +37,17 @@ def line_of_sight(node1, node2, map1):
 
     for i in range(steps):
         r = map1.risk_at((x1 + dx*i, y1 + dy*i))
-        plt.plot(x1 + dx*i, y1 + dy*i,'.')
+        # plt.plot(x1 + dx*i, y1 + dy*i,'.')
         if r == 1.0: # note to self: alternatively, r > 0.9 for tolerance
             return False
     return True
 
-def LPAStar(map1, start, goal, alpha, prev_tree, any_a=True, pri=False):
+def LPAStar(map1, start, goal, alpha, prev_tree, any_a=False, pri=False):
     print("Running LPA* with:")
     print("Start:", start)
     print("Goal:", goal)
     print("Alpha:", alpha)
-    #debug_pub = rospy.Publisher("/eepp/debug", Odometry, queue_size = 1000) # jsonified data
+    debug_pub = rospy.Publisher("/eepp/debug", Odometry, queue_size = 1000) # jsonified data
 
     # Create start and end node
     start_node = Node(None, [None], start, map1.current_at(start))
@@ -217,12 +217,12 @@ def LPAStar(map1, start, goal, alpha, prev_tree, any_a=True, pri=False):
             i += 1
 
             update_vertex(current_node, new_node, any_a) # add extra argument True to apply any angle
-            #msg = Odometry()
-            #msg.header.frame_id="map1"
-            #msg.pose.pose.position.x = child.position[0]
-            #msg.pose.pose.position.y = child.position[1]
-            #msg.pose.pose.position.z = 0.0
-            #debug_pub.publish(msg)
+            msg = Odometry()
+            msg.header.frame_id="map"
+            msg.pose.pose.position.x = new_node.position[0]
+            msg.pose.pose.position.y = new_node.position[1]
+            msg.pose.pose.position.z = 0.0
+            debug_pub.publish(msg)
     print "No path found"
     return None
 

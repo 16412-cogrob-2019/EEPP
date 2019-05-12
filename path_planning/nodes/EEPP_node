@@ -62,16 +62,16 @@ class EEPP_node:
             start = self.currentPos[rIdx]
             rospy.loginfo("Planning paths for agent %i starting at location (%f, %f)", rIdx, start[0], start[1])
             tree = None
-
             for idx, node in enumerate(message):
                 #goal = (node["x"], node["y"])
-                goal = (0.08, -0.89)
+                goal = goals[idx]
                 goal_viz = getGoalmsg(goal)
                 self.goal_vis_pub.publish(goal_viz)
 
                 rospy.loginfo("Planning path to PoI %i at location (%f, %f)", idx, goal[0], goal[1])
                 path, cost, tree = plan_path(self.map, start, goal, self.Algorithm, self.alpha, tree)
                 rospy.loginfo("Found path! Cost: %f", cost)
+                print(path)
                 path_viz = getPathmsg(path)
                 self.path_vis_pub.publish(path_viz)
 
