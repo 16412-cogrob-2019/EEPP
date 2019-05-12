@@ -37,6 +37,7 @@ def line_of_sight(node1, node2, map1):
 
     for i in range(steps):
         r = map1.risk_at((x1 + dx*i, y1 + dy*i))
+        plt.plot(x1 + dx*i, y1 + dy*i,'.')
         if r == 1.0: # note to self: alternatively, r > 0.9 for tolerance
             return False
     return True
@@ -231,8 +232,51 @@ def LPAStar(map1, start, goal, alpha, prev_tree, any_a=True, pri=False):
 class MapObject(object):
     def risk_at(self, position):
         (x, y) = position
-        # if x >=0 and x<=20 and y>=0 and y<=20:
-        #     return 1
+        if x >=0 and x<=20 and y>=0 and y<=20:
+            return 1
         return 0
     def current_at(self, position):
         return (-1, 1)
+
+# map1 = MapObject()
+# map1.res = 1
+# map1.height = 100
+# map1.width = 100
+# map1.pos = [-50, -50]
+
+# start = (-30, -30)
+# end = (40, 40)
+
+# start_time = time.time()
+# pri = False
+# any_a = True
+# ans = LPAStar(map1, start, end, 1, None, any_a, pri)
+# plt.clf()
+# plt.imshow(map1)
+# if ans is not None:
+#     path, cost, tree = ans
+#     print "Total time 1st run: ", time.time() - start_time
+#     plt.plot(start[0], start[1], 'g.')
+#     plt.plot(end[0], end[1], 'r.')
+#     for p in range(1, len(path)):
+#         plt.plot([path[p-1][0],path[p][0]],[path[p-1][1],path[p][1]],'b-')
+#         plt.pause(.0001)
+# # plt.show()
+# pri = True
+# for i in range(2,11):
+#     start_time = time.time()
+#     ans = LPAStar(map1, start, tuple((np.random.rand(2)*70-30).astype("int")), 1, tree, any_a, pri)
+#     if ans is not None:
+#         path, cost, tree = ans
+#         th = "nd" if i == 2 else "rd" if i == 3 else "th"
+#         print "Total time %d"%i,th," run: ", time.time() - start_time
+#         for p in range(1, len(path)):
+#             plt.plot([path[p-1][0],path[p][0]],[path[p-1][1],path[p][1]],'b-')
+#             plt.pause(.0001)
+#     plt.pause(10)
+# plt.show()
+
+# print("Test path:")
+# for pos in path:
+#     print(pos)
+# print("Cost:", cost)
