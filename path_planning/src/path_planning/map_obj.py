@@ -4,7 +4,7 @@ import scipy.ndimage
 
 import current_types
 
-class Map:
+class MapObj:
     """docstring for Map"""
     def __init__(self, map_msg, add_blur=True):
         self.array = self.update_grid(map_msg.data)
