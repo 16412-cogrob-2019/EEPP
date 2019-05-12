@@ -57,33 +57,35 @@ class EEPP_node:
         message = json.loads(data.data)
 
         goals = [(0.285, -0.693),(0.99,-2.25), (1.54,0.092), (0.5,-2.2),(0.285, -0.693)]
-        # Plan paths from the robot to each PoI
-        for idx, node in enumerate(message):
-            # goal = (node["x"], node["y"])
-            goal = goals[idx]
-            goal_viz = getGoalmsg(goal)
-            self.goal_vis_pub.publish(goal_viz)
-            rospy.loginfo("[EEPP] Planning paths to PoI %i at location (%f, %f)", idx, goal[0], goal[1])
-            message[idx]["connectivity"] = []
-            message[idx]["agent_id"] = -1
-            message[idx]["paths"] = []
-            message[idx]["costs"] = []
+        ## Loop over robots and plan a path for each robot
+        for rIdx in range(self.nRobots):
+            start = self.currentPos[rIdx]
+            rospy.loginfo("Planning paths for agent %i starting at location (%f, %f)", rIdx, start[0], start[1])
+            tree = None
 
-            if self.map.risk_at(goal) > 0.1:
-                rospy.loginfo("[EEPP] PoI is inside an obstacle! Skipping...")
-                # message[idx]["paths"].append([[0.0,0.0,0.0]])
-                # message[idx]["costs"].append(999999.0)
-                #continue
+            for idx, node in enumerate(message):
+                #goal = (node["x"], node["y"])
+                goal = (0.08, -0.89)
+                goal_viz = self.getGoalmsg(goal)
+                self.goal_vis_pub.publish(goal_viz)
 
-            ## Loop over robots and plan a path for each robot
-            for rIdx in range(self.nRobots):
-                start = self.currentPos[rIdx]
-                rospy.loginfo("Planning path for agent %i starting at location (%f, %f)", rIdx, start[0], start[1])
-                path, cost, tree = plan_path(self.map, start, goal, self.Algorithm, self.alpha, self.tree)
-                self.tree = tree
+                rospy.loginfo("Planning path to PoI %i at location (%f, %f)", idx, goal[0], goal[1])
+                path, cost, tree = plan_path(self.map, start, goal, self.Algorithm, self.alpha, tree)
                 rospy.loginfo("Found path! Cost: %f", cost)
                 path_viz = self.getPathmsg(path)
                 self.path_vis_pub.publish(path_viz)
+
+                if "connectivity" not in message[idx]:
+                    message[idx]["connectivity"] = []
+                    message[idx]["agent_id"] = -1
+                    message[idx]["paths"] = []
+                    message[idx]["costs"] = []
+
+                if self.map.risk_at(goal) > 0.1:
+                    rospy.loginfo("PoI point is inside an obstacle! Skipping...")
+                    # message[idx]["paths"].append([[0.0,0.0,0.0]])
+                    # message[idx]["costs"].append(999999.0)
+                    #continue
 
                 message[idx]["paths"].append(path)
                 message[idx]["costs"].append(cost)
