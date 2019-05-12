@@ -71,7 +71,6 @@ class EEPP_node:
                 rospy.loginfo("Planning path to PoI %i at location (%f, %f)", idx, goal[0], goal[1])
                 path, cost, tree = plan_path(self.map, start, goal, self.Algorithm, self.alpha, tree)
                 rospy.loginfo("Found path! Cost: %f", cost)
-                print(path)
                 path_viz = getPathmsg(path)
                 self.path_vis_pub.publish(path_viz)
 
@@ -81,8 +80,8 @@ class EEPP_node:
                     message[idx]["paths"] = []
                     message[idx]["costs"] = []
 
-                if self.map.risk_at(goal) > 0.1:
-                    rospy.loginfo("PoI point is inside an obstacle! Skipping...")
+                # if self.map.risk_at(goal) > 0.1:
+                    # rospy.loginfo("PoI point is inside an obstacle! Skipping...")
                     # message[idx]["paths"].append([[0.0,0.0,0.0]])
                     # message[idx]["costs"].append(999999.0)
                     #continue

@@ -107,6 +107,7 @@ def LPAStar(map1, start, goal, alpha, prev_tree, any_a=False, pri=False):
 
         # Found the goal
 
+        # Checks if we interesect the pre-existing tree anywhere
         tree_node = in_tree(current_node, prev_tree, step)
         # if tree_node:
         #     path = []
@@ -118,27 +119,32 @@ def LPAStar(map1, start, goal, alpha, prev_tree, any_a=False, pri=False):
 
         if dist(current_node, start_node) <= step/2.0 or tree_node != False:
             path = []
-
+            path_cost = 0
 
 
             # (x,y) = goal_node.position
             # path = [(x,y,np.linalg.norm(goal_node.speed))]
-
+            # If we intersect the tree, find the path from start to intersection
             if tree_node != False:
+                # current_node.parent = tree_node
                 path_node = tree_node
-
+                # path_cost = current_node.g - tree_node.g
                 while path_node is not None:
                     # print path_node
                     # print path_node
                     (x, y) = path_node.position
                     path.append((x, y, np.linalg.norm(path_node.speed)))
+                    path_cost = path_node.g
                     path_node = path_node.parent
                     # temp.parent = path_node
                     # path_node = temp
+                path_cost -= tree_node.g
+                print path_cost,"PN"
                 path.reverse()
                 tree_node.child.append(current_node)
                 ret_node = prev_tree
 
+            # Else, just go from current node (either at start or intersection) to goal
             else:
                 if prev_tree is not None:
                     prev_tree.child.append(current_node)
@@ -146,10 +152,12 @@ def LPAStar(map1, start, goal, alpha, prev_tree, any_a=False, pri=False):
                     ret_node = prev_tree
                 else:
                     ret_node = current_node
+                # path_cost = current_node.g
                 path = []
 
+            print current_node.g,"CN"
+            path_cost += current_node.g
             path_node = current_node
-            path_cost = current_node.g
             while path_node is not None:
                 # print path_node
                 # print path_node
@@ -159,7 +167,6 @@ def LPAStar(map1, start, goal, alpha, prev_tree, any_a=False, pri=False):
                 if temp is not None:
                     temp.parent = path_node
                 path_node = temp
-
             # (x,y) = start_node.position
             # path.append((x,y,np.linalg.norm(start_node.speed)))
 
@@ -229,33 +236,71 @@ def LPAStar(map1, start, goal, alpha, prev_tree, any_a=False, pri=False):
 ###############################################################################
 # Testing
 
-class MapObject(object):
-    def risk_at(self, position):
-        (x, y) = position
-        if x >=0 and x<=20 and y>=0 and y<=20:
-            return 1
-        return 0
-    def current_at(self, position):
-        return (-1, 1)
+# class MapObject(object):
+#     def risk_at(self, position):
+#         (x, y) = position
+#         # if x >=0 and x<=20 and y>=0 and y<=20:
+#         #     return 1
+#         return 0
+#     def current_at(self, position):
+#         return (-1, 1)
+#
+# import current_types
+# import map_obj
+# class Map:
+#     """docstring for Map"""
+#     def __init__(self, map_msg, add_blur=True):
+#         self.array = self.update_grid(map_msg.data)
+#         self.height = map_msg.info.height #Ngridpoints
+#         self.width = map_msg.info.width #Ngridpoints
+#         self.res = map_msg.info.resolution #m/cell
+#         self.origin = map_msg.info.origin
+#         self.pos = [self.origin.position.x, self.origin.position.y]
+#         self.grid = np.asarray(self.array, dtype=np.int8).reshape(self.height, self.width)
+#         self.risk = self.get_risk_field(self.grid, add_blur)
+#         self.current = current_types.Current("Sine Waves Horiz", 1, np.zeros_like(self.grid,dtype="float"))
+
+class Position:
+    def __init__(self,x,y):
+        self.x = x
+        self.y = y
+
+class Origin:
+    def __init__(self,position):
+        self.position = position
+
+class Info:
+    def __init__(self,height,width,origin,resolution):
+        self.height = height
+        self.width = width
+        self.resolution = resolution
+        self.origin = origin
+
+class MSG:
+    def __init__(self,info,data):
+        self.info = info
+        self.data = data
+
 
 # map1 = MapObject()
 # map1.res = 1
 # map1.height = 100
 # map1.width = 100
 # map1.pos = [-50, -50]
-
+#
 # start = (-30, -30)
 # end = (40, 40)
-
+#
 # start_time = time.time()
 # pri = False
-# any_a = True
+# any_a = False
 # ans = LPAStar(map1, start, end, 1, None, any_a, pri)
 # plt.clf()
-# plt.imshow(map1)
+# # plt.imshow(map1)
 # if ans is not None:
 #     path, cost, tree = ans
 #     print "Total time 1st run: ", time.time() - start_time
+#     print "Path Cost", cost
 #     plt.plot(start[0], start[1], 'g.')
 #     plt.plot(end[0], end[1], 'r.')
 #     for p in range(1, len(path)):
@@ -270,13 +315,14 @@ class MapObject(object):
 #         path, cost, tree = ans
 #         th = "nd" if i == 2 else "rd" if i == 3 else "th"
 #         print "Total time %d"%i,th," run: ", time.time() - start_time
+#         print "Path Cost", cost
 #         for p in range(1, len(path)):
 #             plt.plot([path[p-1][0],path[p][0]],[path[p-1][1],path[p][1]],'b-')
 #             plt.pause(.0001)
 #     plt.pause(10)
 # plt.show()
-
-# print("Test path:")
-# for pos in path:
-#     print(pos)
-# print("Cost:", cost)
+#
+# # print("Test path:")
+# # for pos in path:
+# #     print(pos)
+# # print("Cost:", cost)
