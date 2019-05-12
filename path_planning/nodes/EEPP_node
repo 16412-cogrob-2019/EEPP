@@ -23,6 +23,9 @@ class EEPP_node:
         self.nRobots = n_agents
         self.currentPos = [(0.1, -0.05)]
 
+        # Tree of previously planned paths
+        self.tree = None
+
         self.nPoIs = n_pois
         self.nNeighbors = n_neighbors
 
@@ -75,10 +78,11 @@ class EEPP_node:
             ## Loop over robots and plan a path for each robot
             for rIdx in range(self.nRobots):
                 start = self.currentPos[rIdx]
-                rospy.loginfo("[EEPP] Planning path for agent %i starting at location (%f, %f)", rIdx, start[0], start[1])
-                path, cost = plan_path(self.map, start, goal, self.Algorithm, self.alpha)
-                rospy.loginfo("[EEPP] Found path! Cost: %f", cost)
-                path_viz = getPathmsg(path)
+                rospy.loginfo("Planning path for agent %i starting at location (%f, %f)", rIdx, start[0], start[1])
+                path, cost, tree = plan_path(self.map, start, goal, self.Algorithm, self.alpha, self.tree)
+                self.tree = tree
+                rospy.loginfo("Found path! Cost: %f", cost)
+                path_viz = self.getPathmsg(path)
                 self.path_vis_pub.publish(path_viz)
 
                 message[idx]["paths"].append(path)
