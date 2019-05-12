@@ -28,10 +28,12 @@ def line_of_sight(node1, node2, map1):
     (x2, y2) = node2.position
 
     # TODO: steps can be parameterized maybe
-    steps = 1 + int(abs(x2 - x1)) # integer number of horizontal steps
+    dx = (x2 - x1)
+    dy = (y2 - y1)
+    steps = 1 + int(max(abs(dx), abs(dy))) # integer number of horizontal steps
 
-    dx = (x2 - x1)/steps
-    dy = (y2 - y1)/steps
+    dx = dx/steps
+    dy = dy/steps
 
     for i in range(steps):
         r = map1.risk_at((x1 + dx*i, y1 + dy*i))
@@ -39,7 +41,7 @@ def line_of_sight(node1, node2, map1):
             return False
     return True
 
-def LPAStar(map1, start, goal, alpha, prev_tree):
+def LPAStar(map1, start, goal, alpha, prev_tree, any_a=True, pri=False):
     print("Running LPA* with:")
     print("Start:", start)
     print("Goal:", goal)
@@ -205,15 +207,15 @@ def LPAStar(map1, start, goal, alpha, prev_tree):
             if discard:
                 continue
 
-            # if i % 1 == 0:
-            #     cn = current_node.position
-            #     nn = new_node.position
-            #     plt.plot([nn[0]],[nn[1]],'.')
-            #     plt.pause(0.0001)
+            if i % 1 == 0 and pri:
+                cn = current_node.position
+                nn = new_node.position
+                plt.plot([nn[0]],[nn[1]],'.')
+                plt.pause(0.0001)
 
-            # i += 1
+            i += 1
 
-            update_vertex(current_node, new_node) # add extra argument True to apply any angle
+            update_vertex(current_node, new_node, any_a) # add extra argument True to apply any angle
             #msg = Odometry()
             #msg.header.frame_id="map1"
             #msg.pose.pose.position.x = child.position[0]
@@ -245,7 +247,9 @@ start = (-30, -30)
 end = (40, 40)
 
 start_time = time.time()
-ans = LPAStar(map1, start, end, 1, None)
+pri = False
+any_a = True
+ans = LPAStar(map1, start, end, 1, None, any_a, pri)
 plt.clf()
 if ans is not None:
     path, cost, tree = ans
@@ -256,9 +260,10 @@ if ans is not None:
         plt.plot([path[p-1][0],path[p][0]],[path[p-1][1],path[p][1]],'b-')
         plt.pause(.0001)
 # plt.show()
+pri = True
 for i in range(2,11):
     start_time = time.time()
-    ans = LPAStar(map1, start, tuple((np.random.rand(2)*70-30).astype("int")), 1, tree)
+    ans = LPAStar(map1, start, tuple((np.random.rand(2)*70-30).astype("int")), 1, tree, any_a, pri)
     if ans is not None:
         path, cost, tree = ans
         th = "nd" if i == 2 else "rd" if i == 3 else "th"
@@ -266,6 +271,7 @@ for i in range(2,11):
         for p in range(1, len(path)):
             plt.plot([path[p-1][0],path[p][0]],[path[p-1][1],path[p][1]],'b-')
             plt.pause(.0001)
+    plt.pause(10)
 plt.show()
 
 # print("Test path:")
