@@ -12,24 +12,24 @@ from nav_msgs.msg import OccupancyGrid
 from geometry_msgs.msg import PoseArray, Pose, Quaternion
 from visualization_msgs.msg import Marker, MarkerArray
 #path planning imports
-from path_planning import Map, plan_path, toQuaternion
-from mission_controller.msg import ActivityRequest, Waypoint, Plan
+from path_planning import Map, plan_path, toQuaternion, getCurrentmsg, getGoalmsg, getPathmsg
+from mission_controller.msg import ActivityDone, ActivityRequest, Waypoint, Plan
 
 class EEPP_node:
-    def __init__(self, n_agents, n_pois, n_neighbors):
+    def __init__(self, n_agents, n_pois, n_neighbors, namespaces):
     	self.Algorithm = "A*"
         self.alpha = 1.0 #1.0
     	self.map = None
-        # self.currentPos = [](-0.5,-0.5)]
         self.nRobots = n_agents
-        self.currentPos = [(0.0, 0.0)] #[(-2.0, -0.5)]
+        self.currentPos = [(0.1, -0.05)]
 
         self.nPoIs = n_pois
         self.nNeighbors = n_neighbors
 
         # subscribers
         self.maas_sub = rospy.Subscriber("/maas/poi_data", String, self.maas_callback)
-        self.map_sub = rospy.Subscriber("tb3_1/map", OccupancyGrid, self.map_callback)
+        self.map_sub = rospy.Subscriber(namespaces[0]+"/map", OccupancyGrid, self.map_callback)
+        self.position_sub = rospy.Subscriber('/activity/done', ActivityDone, self.position_callback, queue_size=1)
 
         # publishers
         self.mcts_pub = rospy.Publisher("/eepp/path_data", String, queue_size = 10) # jsonified data
@@ -38,34 +38,36 @@ class EEPP_node:
         self.current_pub = rospy.Publisher("/eepp/current_array", PoseArray, queue_size = 10)
         self.goal_vis_pub = rospy.Publisher("/eepp/goal_marker", Marker, queue_size = 10 )
         self.path_vis_pub = rospy.Publisher("/eepp/path_marker_array", MarkerArray, queue_size = 10 )
+
 ############################# Subscriber Callback functions ####################
     '''
     Callback Function for when we receive the POI data from the MAAS team.
     Check that we have map info then plan paths to the POIs.
     '''
     def maas_callback(self, data):
-        rospy.loginfo("EEPP received PoI data from MAAS")
+        rospy.loginfo("[EEPP] Received PoI data from MAAS")
         if self.map == None:
-        	rospy.loginfo("EEPP has not recieved map info yet! Unable to plan paths to POIs.")
+        	rospy.loginfo("[EEPP] Have not recieved map info yet! Unable to plan paths to POIs.")
         	return
 
         #read in the message from MAAS
         message = json.loads(data.data)
 
+        goals = [(0.285, -0.693),(0.99,-2.25), (1.54,0.092), (0.5,-2.2),(0.285, -0.693)]
         # Plan paths from the robot to each PoI
         for idx, node in enumerate(message):
-            #goal = (node["x"], node["y"])
-            goal = (0.08, -0.89)
-            goal_viz = self.getGoalmsg(goal)
+            # goal = (node["x"], node["y"])
+            goal = goals[idx]
+            goal_viz = getGoalmsg(goal)
             self.goal_vis_pub.publish(goal_viz)
-            rospy.loginfo("Planning paths to PoI %i at location (%f, %f)", idx, goal[0], goal[1])
+            rospy.loginfo("[EEPP] Planning paths to PoI %i at location (%f, %f)", idx, goal[0], goal[1])
             message[idx]["connectivity"] = []
             message[idx]["agent_id"] = -1
             message[idx]["paths"] = []
             message[idx]["costs"] = []
 
             if self.map.risk_at(goal) > 0.1:
-                rospy.loginfo("PoI point is inside an obstacle! Skipping...")
+                rospy.loginfo("[EEPP] PoI is inside an obstacle! Skipping...")
                 # message[idx]["paths"].append([[0.0,0.0,0.0]])
                 # message[idx]["costs"].append(999999.0)
                 #continue
@@ -73,10 +75,10 @@ class EEPP_node:
             ## Loop over robots and plan a path for each robot
             for rIdx in range(self.nRobots):
                 start = self.currentPos[rIdx]
-                rospy.loginfo("Planning path for agent %i starting at location (%f, %f)", rIdx, start[0], start[1])
+                rospy.loginfo("[EEPP] Planning path for agent %i starting at location (%f, %f)", rIdx, start[0], start[1])
                 path, cost = plan_path(self.map, start, goal, self.Algorithm, self.alpha)
-                rospy.loginfo("Found path! Cost: %f", cost)
-                path_viz = self.getPathmsg(path)
+                rospy.loginfo("[EEPP] Found path! Cost: %f", cost)
+                path_viz = getPathmsg(path)
                 self.path_vis_pub.publish(path_viz)
 
                 message[idx]["paths"].append(path)
@@ -97,8 +99,7 @@ class EEPP_node:
             robot_node["paths"] = [[[0.0,0.0,0.0]]]
             message.append(robot_node)
 
-        rospy.loginfo("All paths found. Sending path data to MCTS")
-        print(message)
+        rospy.loginfo("[EEPP] All paths found. Sending path data to MCTS")
         self.publish_paths(message)
         self.currentPos = (node["x"], node["y"])
 
@@ -106,89 +107,21 @@ class EEPP_node:
     Callback Function for when we receive the map from the map_server node. Take the occupancygrid and derive the info we need.
     '''
     def map_callback(self, msg):
-        rospy.loginfo("Received map data!")
+        rospy.loginfo("[EEPP] Received map data!")
         self.map = Map(msg)
-        current_message = self.getCurrentmsg()
+        current_message = getCurrentmsg(self.map)
         self.current_pub.publish(current_message)
 
+    def position_callback(self, data):
+        """
+        :type data: ActivityDone
+        """
+        rospy.loginfo("[EEPP] Updating current robot locations")
+        samples_x_vals = data.x_vals #  message["x_vals"]
+        samples_y_vals = data.y_vals # message["y_vals"]
 
-    def getCurrentmsg(self):
-        map = self.map
-        pa = PoseArray()
-        pa.header.frame_id = "map"
-        for i in range(0,map.width,10):
-            for j in range(0,map.height,10):
-                x = i*map.res
-                y = j*map.res
-                p = Pose()
-                p.position.x = float(x) + map.pos[0]
-                p.position.y = float(y) + map.pos[1]
-                p.position.z = 0.0
-
-                cx, cy = map.current.current_x[j,i],map.current.current_y[j,i]
-                yaw = np.arctan2(cy,cx)
-                p.orientation = toQuaternion(yaw)
-                pa.poses.append(p)
-        return pa
-    def getGoalmsg(self,goal):
-        marker = Marker()
-        marker.header.frame_id = "map"
-        marker.header.seq = 0
-        marker.id = 0
-        marker.type = 2 #sphere
-        marker.pose.orientation = toQuaternion(0.0)
-
-        marker.scale.x = 0.1
-        marker.scale.y = 0.1
-        marker.scale.z = 0.1
-
-        marker.color.g = 255.0
-        marker.color.a = 1
-
-        marker.pose.position.x = goal[0]
-        marker.pose.position.y = goal[1]
-        marker.pose.position.z = 0.0
-        return marker
-
-    def getPathmsg(self,path):
-        patharray = MarkerArray()
-
-        for i in range(len(path)-1):
-            currentx = path[i][0]
-            currenty = path[i][1]
-
-            nextx = path[i+1][0]
-            nexty = path[i+1][1]
-            speed = path[i+1][2]
-
-            marker = Marker()
-            marker.header.frame_id = "map"
-            marker.header.seq = i
-            marker.id = i
-            marker.type = 2 #sphere
-            dx = nextx - currentx
-            dy = nexty - currenty
-            yaw = np.arctan2(dy,dx)
-            marker.pose.orientation = toQuaternion(yaw)
-
-            # marker.scale.y = 0.05*speed
-            # marker.scale.x = 0.05*speed
-            marker.scale.x = 0.1
-            marker.scale.y = 0.1
-            marker.scale.z = 0.1
-
-            marker.color.g = 255.0
-            marker.color.a = 1
-
-            marker.pose.position.x = currentx
-            marker.pose.position.y = currenty
-            marker.pose.position.z = 0.0
-
-
-
-            patharray.markers.append(marker)
-
-        return patharray
+        for agent_id in xrange(len(samples_y_vals)):
+            self.currentPos[agent_id] = (samples_x_vals[agent_id],samples_y_vals[agent_id])
 
 
 ############################# Publisher functions ##############################
@@ -196,17 +129,18 @@ class EEPP_node:
     Publish POI data with paths and costs to the MCTS team.
     '''
     def publish_paths(self, message):
-        activity = ActivityRequest()
-        p = Plan()
-        for pt in message[0]["paths"][0]:
-            wp = Waypoint()
-            wp.x, wp.y, wp.vel = pt
-            p.wypts.append(wp)
-        activity.plns.append(p)
-        activity.activity_id = 0
-        activity.activity_name = "test"
-        print(activity)
-        self.activity_pub.publish(activity)
+        self.mcts_pub.publish(json.dumps(message))
+        # activity = ActivityRequest()
+        # p = Plan()
+        # for pt in message[0]["paths"][0]:
+        #     wp = Waypoint()
+        #     wp.x, wp.y, wp.vel = pt
+        #     p.wypts.append(wp)
+        # activity.plns.append(p)
+        # activity.activity_id = 0
+        # activity.activity_name = "test"
+        # print(activity)
+        # self.activity_pub.publish(activity)
 
 
 
@@ -219,7 +153,7 @@ def main():
     # init ros node
     rospy.init_node('EEPP', anonymous = True)
     # class instance
-    EEPP = EEPP_node(rospy.get_param('n_agents'),rospy.get_param('n_pois'),rospy.get_param('n_neighbors'))
+    EEPP = EEPP_node(rospy.get_param('n_agents'),rospy.get_param('n_pois'),rospy.get_param('n_neighbors'), rospy.get_param('namespaces'))
 
     # create ros loop
     pub_rate = 1 # hertz

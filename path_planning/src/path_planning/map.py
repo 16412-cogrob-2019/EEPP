@@ -6,7 +6,7 @@ import current_types
 
 class Map:
     """docstring for Map"""
-    def __init__(self, map_msg, add_blur=False):
+    def __init__(self, map_msg, add_blur=True):
         self.array = self.update_grid(map_msg.data)
         self.height = map_msg.info.height #Ngridpoints
         self.width = map_msg.info.width #Ngridpoints
@@ -28,11 +28,15 @@ class Map:
 
     def get_risk_field(self, grid, add_blur):
         if add_blur:
-            std_dev = 1.5
+            std_dev = 0.1
             scaling = 2
             sigma = (std_dev/self.res, std_dev/self.res)
             blurred_grid = scipy.ndimage.gaussian_filter(grid.astype(float), sigma, mode='reflect', cval=0.0, truncate=4.0)
             blurred_grid = np.clip(blurred_grid*scaling, 0, 1)
+            # xx, yy = np.meshgrid(range(0,self.width), range(0,self.height))
+            # print(blurred_grid)
+            # plt.scatter(xx,yy, np.maximum(blurred_grid, grid))
+            # plt.show()
             return np.maximum(blurred_grid, grid)
         else:
             return grid

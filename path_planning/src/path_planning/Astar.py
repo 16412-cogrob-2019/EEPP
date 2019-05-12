@@ -24,7 +24,7 @@ class Node:
 def line_of_sight(node1, node2, map):
     (x1, y1) = node1.position
     (x2, y2) = node2.position
-    
+
     # TODO: steps can be parameterized maybe
     dx = x2-x1
     dy = y2-y1
@@ -77,7 +77,7 @@ def Astar(map, start, goal, alpha):
         child.f = child.g + child.h
         return child
 
-    def update_vertex(current_node, child, use_any_angle=True):
+    def update_vertex(current_node, child, use_any_angle=False):
         if use_any_angle:
             parent = current_node.parent
             if parent and line_of_sight(parent, child, map):
@@ -97,7 +97,7 @@ def Astar(map, start, goal, alpha):
         current_node = open_list.pop()
         closed_list.append(current_node.position)
 
-        step = map.res
+        step = 4*map.res
 
         # Found the goal
         if dist(current_node, goal_node) <= step:
