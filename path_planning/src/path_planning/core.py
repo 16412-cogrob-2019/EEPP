@@ -1,4 +1,5 @@
 from path_planning.Astar import Astar
+from path_planning.LPAStar import LPAStar
 #import other algorithms
 
 class PathTree():

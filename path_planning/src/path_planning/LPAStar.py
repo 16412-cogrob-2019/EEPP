@@ -2,9 +2,9 @@ import numpy as np
 from utils import *
 import time
 #import rospy
-#from nav_msgs.msg import Odometry
+from nav_msgs.msg import Odometry
 
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 
 # TODO: figure out how to do base speed. Currently hardcoded
 auv_speed = 10.0
@@ -53,9 +53,9 @@ def LPAStar(map1, start, goal, alpha, prev_tree, any_a=True, pri=False):
     start_node.g = start_node.h = start_node.f = 0
     goal_node = Node(None, [None], goal, map1.current_at(goal))
     goal_node.g = goal_node.h = goal_node.f = 0
-    plt.plot(start_node.position[0], start_node.position[1], "g.")
-    plt.plot(goal_node.position[0], goal_node.position[1], "r.")
-    plt.pause(.0001)
+    # plt.plot(start_node.position[0], start_node.position[1], "g.")
+    # plt.plot(goal_node.position[0], goal_node.position[1], "r.")
+    # plt.pause(.0001)
 
     # Initialize both open and closed list
     open_list = NodePriorityQueue()
@@ -66,9 +66,9 @@ def LPAStar(map1, start, goal, alpha, prev_tree, any_a=True, pri=False):
     open_list.put(goal_node, goal_node.f)
 
     goal_node.risk = map1.risk_at(goal_node.position)
-    if goal_node.risk > 0:
-        print "This is an obstacle!"
-        return None
+    # if goal_node.risk > 0:
+        # print "This is an obstacle!"
+        # return None
     # goal_node.timeToChild = 0.001
 
     def update_node_values(parent):
@@ -210,8 +210,8 @@ def LPAStar(map1, start, goal, alpha, prev_tree, any_a=True, pri=False):
             if i % 1 == 0 and pri:
                 cn = current_node.position
                 nn = new_node.position
-                plt.plot([nn[0]],[nn[1]],'.')
-                plt.pause(0.0001)
+                # plt.plot([nn[0]],[nn[1]],'.')
+                # plt.pause(0.0001)
 
             i += 1
 
@@ -236,45 +236,3 @@ class MapObject(object):
         return 0
     def current_at(self, position):
         return (-1, 1)
-
-map1 = MapObject()
-map1.res = 1
-map1.height = 100
-map1.width = 100
-map1.pos = [-50, -50]
-
-start = (-30, -30)
-end = (40, 40)
-
-start_time = time.time()
-pri = False
-any_a = True
-ans = LPAStar(map1, start, end, 1, None, any_a, pri)
-plt.clf()
-if ans is not None:
-    path, cost, tree = ans
-    print "Total time 1st run: ", time.time() - start_time
-    plt.plot(start[0], start[1], 'g.')
-    plt.plot(end[0], end[1], 'r.')
-    for p in range(1, len(path)):
-        plt.plot([path[p-1][0],path[p][0]],[path[p-1][1],path[p][1]],'b-')
-        plt.pause(.0001)
-# plt.show()
-pri = True
-for i in range(2,11):
-    start_time = time.time()
-    ans = LPAStar(map1, start, tuple((np.random.rand(2)*70-30).astype("int")), 1, tree, any_a, pri)
-    if ans is not None:
-        path, cost, tree = ans
-        th = "nd" if i == 2 else "rd" if i == 3 else "th"
-        print "Total time %d"%i,th," run: ", time.time() - start_time
-        for p in range(1, len(path)):
-            plt.plot([path[p-1][0],path[p][0]],[path[p-1][1],path[p][1]],'b-')
-            plt.pause(.0001)
-    plt.pause(10)
-plt.show()
-
-# print("Test path:")
-# for pos in path:
-#     print(pos)
-# print("Cost:", cost)

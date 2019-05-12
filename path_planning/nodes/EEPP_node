@@ -17,7 +17,7 @@ from mission_controller.msg import ActivityDone, ActivityRequest, Waypoint, Plan
 
 class EEPP_node:
     def __init__(self, n_agents, n_pois, n_neighbors, namespaces):
-    	self.Algorithm = "A*"
+    	self.Algorithm = "LPA*"
         self.alpha = 1.0 #1.0
     	self.map = None
         self.nRobots = n_agents
@@ -66,13 +66,13 @@ class EEPP_node:
             for idx, node in enumerate(message):
                 #goal = (node["x"], node["y"])
                 goal = (0.08, -0.89)
-                goal_viz = self.getGoalmsg(goal)
+                goal_viz = getGoalmsg(goal)
                 self.goal_vis_pub.publish(goal_viz)
 
                 rospy.loginfo("Planning path to PoI %i at location (%f, %f)", idx, goal[0], goal[1])
                 path, cost, tree = plan_path(self.map, start, goal, self.Algorithm, self.alpha, tree)
                 rospy.loginfo("Found path! Cost: %f", cost)
-                path_viz = self.getPathmsg(path)
+                path_viz = getPathmsg(path)
                 self.path_vis_pub.publish(path_viz)
 
                 if "connectivity" not in message[idx]:
