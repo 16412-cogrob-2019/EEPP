@@ -39,7 +39,7 @@ def line_of_sight(node1, node2, map1):
             return False
     return True
 
-def LPAStar(map1, start, goal, alpha, prev_tree, any_a=True, pri=False):
+def LPAStar(map1, start, goal, alpha, prev_tree, any_a=False, pri=False):
     # print("Running LPA* with:")
     # print("Start:", start)
     # print("Goal:", goal)
