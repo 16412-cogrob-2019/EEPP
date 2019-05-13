@@ -16,7 +16,7 @@ from path_planning import Map, plan_path, toQuaternion, getCurrentmsg, getGoalms
 from mission_controller.msg import ActivityDone, ActivityRequest, Waypoint, Plan
 
 class EEPP_node:
-    def __init__(self, n_agents, n_pois, n_neighbors, namespaces):
+    def __init__(self, n_agents, n_pois, n_neighbors, namespace):
     	self.Algorithm = "LPA*"
         self.alpha = 1.0 #1.0
     	self.map = None
@@ -31,7 +31,7 @@ class EEPP_node:
 
         # subscribers
         self.maas_sub = rospy.Subscriber("/maas/poi_data", String, self.maas_callback)
-        self.map_sub = rospy.Subscriber(namespaces[0]+"/map", OccupancyGrid, self.map_callback)
+        self.map_sub = rospy.Subscriber(namespace+"/map", OccupancyGrid, self.map_callback)
         self.position_sub = rospy.Subscriber('/activity/done', ActivityDone, self.position_callback, queue_size=1)
 
         # publishers
@@ -50,21 +50,55 @@ class EEPP_node:
     def maas_callback(self, data):
         rospy.loginfo("[EEPP] Received PoI data from MAAS")
         if self.map == None:
-        	rospy.loginfo("[EEPP] Have not recieved map info yet! Unable to plan paths to POIs.")
+        	rospy.loginfo("[EEPP] Have not received map info yet! Unable to plan paths to POIs.")
         	return
 
         #read in the message from MAAS
         message = json.loads(data.data)
 
-        goals = [(0.285, -0.693),(0.99,-2.25), (1.54,0.092), (0.5,-2.2),(0.285, -0.693)]
+        message[0]["x"] = 0.285
+        message[0]["y"] = -0.693
+        message[1]["x"] = 0.99
+        message[1]["y"] = -2.25
+        message[2]["x"] = 1.54
+        message[2]["y"] = 0.092
+        message[3]["x"] = 0.5
+        message[3]["y"] = -2.2
+        message[4]["x"] = 0.285
+        message[4]["y"] =  -0.693
+
+        nodestoremove = []
+        for idx, node in  enumerate(message):
+            if self.map.risk_at((node["x"],node["y"])) > 0.9:
+                rospy.loginfo("PoI at (%f, %f) is inside an obstacle! Removing it...", node["x"],node["y"])
+                nodestoremove.append(idx)
+        for idx in sorted(nodestoremove, reverse=True):
+            del message[idx]
+
+        if len(message) < self.nRobots:
+        	rospy.loginfo("[EEPP] The number of obstacle free PoIs is less than the number of robots! Aborting path-planning...")
+        	return
+
+
         ## Loop over robots and plan a path for each robot
         for rIdx in range(self.nRobots):
+            # add robot node
+            robot_node = dict()
+            robot_node["x"] = self.currentPos[rIdx][0]
+            robot_node["y"] = self.currentPos[rIdx][1]
+            robot_node["poi_id"] = self.nPoIs+rIdx
+            robot_node["poi_reward"] = 0.0
+            robot_node["agent_id"] = rIdx
+            robot_node["connectivity"]= []
+            robot_node["costs"] = []
+            robot_node["paths"] = []
+
             start = self.currentPos[rIdx]
             rospy.loginfo("Planning paths for agent %i starting at location (%f, %f)", rIdx, start[0], start[1])
             tree = None
-            for idx, node in enumerate(message):
-                #goal = (node["x"], node["y"])
-                goal = goals[idx]
+
+            for idx, node in enumerate(message[0:self.nPoIs]):
+                goal = (node["x"], node["y"])
                 goal_viz = getGoalmsg(goal)
                 self.goal_vis_pub.publish(goal_viz)
 
@@ -73,36 +107,31 @@ class EEPP_node:
                 rospy.loginfo("Found path! Cost: %f", cost)
                 path_viz = getPathmsg(path)
                 self.path_vis_pub.publish(path_viz)
+                robot_node["connectivity"].append(node["poi_id"])
+                robot_node["paths"].append(path)
+                robot_node["costs"].append(cost)
 
-                if "connectivity" not in message[idx]:
-                    message[idx]["connectivity"] = []
-                    message[idx]["agent_id"] = -1
-                    message[idx]["paths"] = []
-                    message[idx]["costs"] = []
-
-                # if self.map.risk_at(goal) > 0.1:
-                    # rospy.loginfo("PoI point is inside an obstacle! Skipping...")
-                    # message[idx]["paths"].append([[0.0,0.0,0.0]])
-                    # message[idx]["costs"].append(999999.0)
-                    #continue
-
-                message[idx]["paths"].append(path)
-                message[idx]["costs"].append(cost)
-                message[idx]["connectivity"].append(message[0]["poi_id"]+rIdx)
-
-
-        #Then add the robot nodes to the list
-        for rIdx in range(self.nRobots):
-            robot_node = dict()
-            robot_node["x"] = self.currentPos[rIdx][0]
-            robot_node["y"] = self.currentPos[rIdx][1]
-            robot_node["poi_id"] = message[0]["poi_id"]+rIdx+1
-            robot_node["poi_reward"] = 0.0
-            robot_node["connectivity"]= [message[0]["poi_id"]]
-            robot_node["agent_id"] = rIdx
-            robot_node["costs"] = [0.0]
-            robot_node["paths"] = [[[0.0,0.0,0.0]]]
             message.append(robot_node)
+
+        # Now plan paths from each node to each other node
+        for sIdx, startnode in enumerate(message[0:self.nPoIs]):
+            start = (startnode["x"], startnode["y"])
+            message[sIdx]["agent_id"] = -1
+            message[sIdx]["connectivity"]= []
+            message[sIdx]["costs"] = []
+            message[sIdx]["paths"] = []
+            for gIdx, goalnode in enumerate(message[0:self.nPoIs]):
+                if sIdx == gIdx:
+                    continue
+                rospy.loginfo("[EEPP] Planning path from PoI %i to %i. Locations (%f, %f) --> (%f,%f)", sIdx, gIdx, startnode["x"], startnode["y"], goalnode["x"], goalnode["y"])
+                goal = (goalnode["x"], goalnode["y"])
+                path, cost, tree = plan_path(self.map, start, goal, self.Algorithm, self.alpha, tree)
+                rospy.loginfo("[EEPP] Found path! Cost: %f", cost)
+                path_viz = getPathmsg(path)
+                self.path_vis_pub.publish(path_viz)
+                message[sIdx]["connectivity"].append(gIdx)
+                message[sIdx]["paths"].append(path)
+                message[sIdx]["costs"].append(cost)
 
         rospy.loginfo("[EEPP] All paths found. Sending path data to MCTS")
         self.publish_paths(message)
@@ -158,7 +187,7 @@ def main():
     # init ros node
     rospy.init_node('EEPP', anonymous = True)
     # class instance
-    EEPP = EEPP_node(rospy.get_param('n_agents'),rospy.get_param('n_pois'),rospy.get_param('n_neighbors'), rospy.get_param('namespaces'))
+    EEPP = EEPP_node(rospy.get_param('n_agents'),rospy.get_param('n_pois'),rospy.get_param('n_neighbors'), rospy.get_param('namespace'))
 
     # create ros loop
     pub_rate = 1 # hertz

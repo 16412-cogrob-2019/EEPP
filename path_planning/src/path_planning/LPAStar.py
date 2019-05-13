@@ -43,10 +43,10 @@ def line_of_sight(node1, node2, map1):
     return True
 
 def LPAStar(map1, start, goal, alpha, prev_tree, any_a=False, pri=False):
-    print("Running LPA* with:")
-    print("Start:", start)
-    print("Goal:", goal)
-    print("Alpha:", alpha)
+    # print("Running LPA* with:")
+    # print("Start:", start)
+    # print("Goal:", goal)
+    # print("Alpha:", alpha)
     debug_pub = rospy.Publisher("/eepp/debug", Odometry, queue_size = 1000) # jsonified data
 
     # Create start and end node
@@ -139,7 +139,7 @@ def LPAStar(map1, start, goal, alpha, prev_tree, any_a=False, pri=False):
                     # temp.parent = path_node
                     # path_node = temp
                 path_cost -= tree_node.g
-                print path_cost,"PN"
+                # print path_cost,"PN"
                 path.reverse()
                 tree_node.child.append(current_node)
                 ret_node = prev_tree
@@ -155,7 +155,7 @@ def LPAStar(map1, start, goal, alpha, prev_tree, any_a=False, pri=False):
                 # path_cost = current_node.g
                 path = []
 
-            print current_node.g,"CN"
+            # print current_node.g,"CN"
             path_cost += current_node.g
             path_node = current_node
             while path_node is not None:
