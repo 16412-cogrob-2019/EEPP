@@ -1,8 +1,8 @@
 import numpy as np
 from utils import *
 import time
-import rospy
-from nav_msgs.msg import Odometry
+#import rospy
+# from nav_msgs.msg import Odometry
 
 # import matplotlib.pyplot as plt
 
@@ -42,12 +42,12 @@ def line_of_sight(node1, node2, map1):
             return False
     return True
 
-def LPAStar(map1, start, goal, alpha, prev_tree, any_a=False, pri=False):
-    # print("Running LPA* with:")
-    # print("Start:", start)
-    # print("Goal:", goal)
-    # print("Alpha:", alpha)
-    debug_pub = rospy.Publisher("/eepp/debug", Odometry, queue_size = 1000) # jsonified data
+def LPAStar(map1, start, goal, alpha, prev_tree, any_a=True, pri=False):
+    print("Running LPA* with:")
+    print("Start:", start)
+    print("Goal:", goal)
+    print("Alpha:", alpha)
+    #debug_pub = rospy.Publisher("/eepp/debug", Odometry, queue_size = 1000) # jsonified data
 
     # Create start and end node
     start_node = Node(None, [None], start, map1.current_at(start))
@@ -157,6 +157,7 @@ def LPAStar(map1, start, goal, alpha, prev_tree, any_a=False, pri=False):
 
             # print current_node.g,"CN"
             path_cost += current_node.g
+            current_node.g = path_cost
             path_node = current_node
             while path_node is not None:
                 # print path_node
@@ -224,29 +225,29 @@ def LPAStar(map1, start, goal, alpha, prev_tree, any_a=False, pri=False):
             i += 1
 
             update_vertex(current_node, new_node, any_a) # add extra argument True to apply any angle
-            msg = Odometry()
-            msg.header.frame_id="map"
-            msg.pose.pose.position.x = new_node.position[0]
-            msg.pose.pose.position.y = new_node.position[1]
-            msg.pose.pose.position.z = 0.0
-            debug_pub.publish(msg)
+            #msg = Odometry()
+            #msg.header.frame_id="map1"
+            #msg.pose.pose.position.x = child.position[0]
+            #msg.pose.pose.position.y = child.position[1]
+            #msg.pose.pose.position.z = 0.0
+            #debug_pub.publish(msg)
     print "No path found"
     return None
 
 ###############################################################################
 # Testing
 
-# class MapObject(object):
-#     def risk_at(self, position):
-#         (x, y) = position
-#         # if x >=0 and x<=20 and y>=0 and y<=20:
-#         #     return 1
-#         return 0
-#     def current_at(self, position):
-#         return (-1, 1)
-#
-# import current_types
-# import map_obj
+class MapObject(object):
+    def risk_at(self, position):
+        (x, y) = position
+        # if x >=0 and x<=20 and y>=0 and y<=20:
+        #     return 1
+        return 0
+    def current_at(self, position):
+        return (-1, 1)
+
+import current_types
+import map_obj
 # class Map:
 #     """docstring for Map"""
 #     def __init__(self, map_msg, add_blur=True):
@@ -287,10 +288,10 @@ class MSG:
 # map1.height = 100
 # map1.width = 100
 # map1.pos = [-50, -50]
-#
+
 # start = (-30, -30)
 # end = (40, 40)
-#
+
 # start_time = time.time()
 # pri = False
 # any_a = False
@@ -321,8 +322,8 @@ class MSG:
 #             plt.pause(.0001)
 #     plt.pause(10)
 # plt.show()
-#
-# # print("Test path:")
-# # for pos in path:
-# #     print(pos)
-# # print("Cost:", cost)
+
+# print("Test path:")
+# for pos in path:
+#     print(pos)
+# print("Cost:", cost)
