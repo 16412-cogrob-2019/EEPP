@@ -21,7 +21,7 @@ class EEPP_node:
         self.alpha = 1.0 #1.0
     	self.map = None
         self.nRobots = n_agents
-        self.currentPos = [(0.1, -0.05)]
+        self.currentPos = [(0.0, 0.0)]*n_agents
 
         # Tree of previously planned paths
         self.tree = None
@@ -79,6 +79,8 @@ class EEPP_node:
         for idx in sorted(nodestoremove, reverse=True):
             del message[idx]
 
+        nPoIs = self.nPoIs - len(nodestoremove)
+
         if len(message) < self.nRobots:
         	rospy.loginfo("[EEPP] The number of obstacle free PoIs is less than the number of robots! Aborting path-planning...")
         	return
@@ -101,7 +103,7 @@ class EEPP_node:
             rospy.loginfo("Planning paths for agent %i starting at location (%f, %f)", rIdx, start[0], start[1])
             tree = None
 
-            for idx, node in enumerate(message[0:self.nPoIs]):
+            for idx, node in enumerate(message[0:nPoIs]):
                 goal = (node["x"], node["y"])
                 goal_viz = getGoalmsg(goal)
                 self.goal_vis_pub.publish(goal_viz)
@@ -118,13 +120,13 @@ class EEPP_node:
             message.append(robot_node)
 
         # Now plan paths from each node to each other node
-        for sIdx, startnode in enumerate(message[0:self.nPoIs]):
+        for sIdx, startnode in enumerate(message[0:nPoIs]):
             start = (startnode["x"], startnode["y"])
             message[sIdx]["agent_id"] = -1
             message[sIdx]["connectivity"]= []
             message[sIdx]["costs"] = []
             message[sIdx]["paths"] = []
-            for gIdx, goalnode in enumerate(message[0:self.nPoIs]):
+            for gIdx, goalnode in enumerate(message[0:nPoIs]):
                 if sIdx == gIdx:
                     continue
                 rospy.loginfo("[EEPP] Planning path from PoI %i to %i. Locations (%f, %f) --> (%f,%f)", sIdx, gIdx, startnode["x"], startnode["y"], goalnode["x"], goalnode["y"])
