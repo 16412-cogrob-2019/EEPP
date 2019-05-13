@@ -34,8 +34,14 @@ def line_of_sight(node1, node2, map):
     dy = dy/steps
 
     for i in range(steps):
-        r = map.risk_at((x1 + dx*i, y1 + dy*i))
-        if r == 1.0: # note to self: alternatively, r > 0.9 for tolerance
+        r = 0
+        # also check surrounding squares
+        for nx in [0, 1, -1]:
+            for ny in [0, 1, -1]:
+                x = x1 + dx*i + nx
+                y = y1 + dy*i + ny
+                r = max(r, map.risk_at((x, y)))
+        if r > 0.5: # == 1.0
             return False
     return True
 
@@ -172,26 +178,3 @@ def Astar(map, start, goal, alpha):
             debug_pub.publish(msg)
 
     return paths, costs
-
-###############################################################################
-# Testing
-# class MapObject(object):
-#     def risk_at(self, position):
-#         (x, y) = position
-#         if x >=0 and x<=20 and y>=0 and y<=20:
-#             return 1
-#         return 0
-#     def current_at(self, position):
-#         return (-1, 1)
-
-# map = MapObject()
-# map.res = 1
-# map.height = 100
-# map.width = 100
-# map.pos = [-50, -50]
-#
-# paths, costs = Astar(map, (-30, -30), (40, 40), 1)
-# print("Test path:")
-# for pos in paths:
-#     print(pos)
-# print("Cost:", costs)
