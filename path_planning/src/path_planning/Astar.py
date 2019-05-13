@@ -5,7 +5,6 @@ from nav_msgs.msg import Odometry
 
 # import matplotlib.pyplot as plt
 
-# TODO: figure out how to do base speed. Currently hardcoded
 auv_speed = 10.0
 
 class Node:
@@ -25,7 +24,6 @@ def line_of_sight(node1, node2, map):
     (x1, y1) = node1.position
     (x2, y2) = node2.position
 
-    # TODO: steps can be parameterized maybe
     dx = x2-x1
     dy = y2-y1
     steps = 1 + int(max(abs(dx),abs(dy))) # integer number of horizontal steps
@@ -38,8 +36,8 @@ def line_of_sight(node1, node2, map):
         # also check surrounding squares
         for nx in [0, 1, -1]:
             for ny in [0, 1, -1]:
-                x = x1 + dx*i + nx
-                y = y1 + dy*i + ny
+                x = x1 + dx*i + nx*4*map.res
+                y = y1 + dy*i + ny*4*map.res
                 r = max(r, map.risk_at((x, y)))
         if r > 0.5: # == 1.0
             return False
