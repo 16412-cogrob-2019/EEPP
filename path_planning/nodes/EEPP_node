@@ -68,10 +68,14 @@ class EEPP_node:
         message[4]["y"] =  -0.693
 
         nodestoremove = []
-        for idx, node in  enumerate(message):
+        nodestokeep = []
+        # data_indices = np.arange(len(message)).tolist()
+            for idx, node in  enumerate(message):
             if self.map.risk_at((node["x"],node["y"])) > 0.9:
                 rospy.loginfo("PoI at (%f, %f) is inside an obstacle! Removing it...", node["x"],node["y"])
                 nodestoremove.append(idx)
+            else:
+                nodestokeep.append(idx)
         for idx in sorted(nodestoremove, reverse=True):
             del message[idx]
 
@@ -129,7 +133,7 @@ class EEPP_node:
                 rospy.loginfo("[EEPP] Found path! Cost: %f", cost)
                 path_viz = getPathmsg(path)
                 self.path_vis_pub.publish(path_viz)
-                message[sIdx]["connectivity"].append(gIdx)
+                message[sIdx]["connectivity"].append(nodestokeep[gIdx])
                 message[sIdx]["paths"].append(path)
                 message[sIdx]["costs"].append(cost)
 
