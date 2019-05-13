@@ -3,8 +3,6 @@ from utils import *
 import rospy
 from nav_msgs.msg import Odometry
 
-# import matplotlib.pyplot as plt
-
 auv_speed = 10.0
 
 class Node:
@@ -55,9 +53,6 @@ def Astar(map, start, goal, alpha):
     start_node.g = start_node.h = start_node.f = 0
     goal_node = Node(None, goal, map.current_at(goal))
     goal_node.g = goal_node.h = goal_node.f = 0
-    # plt.plot(start_node.position[0], start_node.position[1], "g.")
-    # plt.plot(goal_node.position[0], goal_node.position[1], "r.")
-    # plt.pause(.0001)
 
     # Initialize both open and closed list
     open_list = NodePriorityQueue()
@@ -157,14 +152,6 @@ def Astar(map, start, goal, alpha):
 
             if discard:
                 continue
-
-            # if i % 10 == 0:
-            #     cn = current_node.position
-            #     nn = child.position
-            #     plt.plot([nn[0]],[nn[1]],'.')
-            #     plt.pause(0.0001)
-
-            # i += 1
 
             update_vertex(current_node, child) # add extra argument True to apply any angle
 

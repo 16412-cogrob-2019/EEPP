@@ -1,10 +1,8 @@
 import numpy as np
 from utils import *
 import time
-#import rospy
-# from nav_msgs.msg import Odometry
-
-# import matplotlib.pyplot as plt
+import rospy
+from nav_msgs.msg import Odometry
 
 # TODO: figure out how to do base speed. Currently hardcoded
 auv_speed = 10.0
@@ -37,26 +35,22 @@ def line_of_sight(node1, node2, map1):
 
     for i in range(steps):
         r = map1.risk_at((x1 + dx*i, y1 + dy*i))
-        # plt.plot(x1 + dx*i, y1 + dy*i,'.')
         if r == 1.0: # note to self: alternatively, r > 0.9 for tolerance
             return False
     return True
 
 def LPAStar(map1, start, goal, alpha, prev_tree, any_a=True, pri=False):
-    print("Running LPA* with:")
-    print("Start:", start)
-    print("Goal:", goal)
-    print("Alpha:", alpha)
-    #debug_pub = rospy.Publisher("/eepp/debug", Odometry, queue_size = 1000) # jsonified data
+    # print("Running LPA* with:")
+    # print("Start:", start)
+    # print("Goal:", goal)
+    # print("Alpha:", alpha)
+    debug_pub = rospy.Publisher("/eepp/debug", Odometry, queue_size = 1000) # jsonified data
 
     # Create start and end node
     start_node = Node(None, [None], start, map1.current_at(start))
     start_node.g = start_node.h = start_node.f = 0
     goal_node = Node(None, [None], goal, map1.current_at(goal))
     goal_node.g = goal_node.h = goal_node.f = 0
-    # plt.plot(start_node.position[0], start_node.position[1], "g.")
-    # plt.plot(goal_node.position[0], goal_node.position[1], "r.")
-    # plt.pause(.0001)
 
     # Initialize both open and closed list
     open_list = NodePriorityQueue()
@@ -67,10 +61,6 @@ def LPAStar(map1, start, goal, alpha, prev_tree, any_a=True, pri=False):
     open_list.put(goal_node, goal_node.f)
 
     goal_node.risk = map1.risk_at(goal_node.position)
-    # if goal_node.risk > 0:
-        # print "This is an obstacle!"
-        # return None
-    # goal_node.timeToChild = 0.001
 
     def update_node_values(parent):
         parent.risk = map1.risk_at(parent.position)
@@ -219,111 +209,15 @@ def LPAStar(map1, start, goal, alpha, prev_tree, any_a=True, pri=False):
             if i % 1 == 0 and pri:
                 cn = current_node.position
                 nn = new_node.position
-                # plt.plot([nn[0]],[nn[1]],'.')
-                # plt.pause(0.0001)
 
             i += 1
 
             update_vertex(current_node, new_node, any_a) # add extra argument True to apply any angle
-            #msg = Odometry()
-            #msg.header.frame_id="map1"
-            #msg.pose.pose.position.x = child.position[0]
-            #msg.pose.pose.position.y = child.position[1]
-            #msg.pose.pose.position.z = 0.0
-            #debug_pub.publish(msg)
+            msg = Odometry()
+            msg.header.frame_id="map"
+            msg.pose.pose.position.x = new_node.position[0]
+            msg.pose.pose.position.y = new_node.position[1]
+            msg.pose.pose.position.z = 0.0
+            debug_pub.publish(msg)
     print "No path found"
     return None
-
-###############################################################################
-# Testing
-
-class MapObject(object):
-    def risk_at(self, position):
-        (x, y) = position
-        # if x >=0 and x<=20 and y>=0 and y<=20:
-        #     return 1
-        return 0
-    def current_at(self, position):
-        return (-1, 1)
-
-import current_types
-import map_obj
-# class Map:
-#     """docstring for Map"""
-#     def __init__(self, map_msg, add_blur=True):
-#         self.array = self.update_grid(map_msg.data)
-#         self.height = map_msg.info.height #Ngridpoints
-#         self.width = map_msg.info.width #Ngridpoints
-#         self.res = map_msg.info.resolution #m/cell
-#         self.origin = map_msg.info.origin
-#         self.pos = [self.origin.position.x, self.origin.position.y]
-#         self.grid = np.asarray(self.array, dtype=np.int8).reshape(self.height, self.width)
-#         self.risk = self.get_risk_field(self.grid, add_blur)
-#         self.current = current_types.Current("Sine Waves Horiz", 1, np.zeros_like(self.grid,dtype="float"))
-
-class Position:
-    def __init__(self,x,y):
-        self.x = x
-        self.y = y
-
-class Origin:
-    def __init__(self,position):
-        self.position = position
-
-class Info:
-    def __init__(self,height,width,origin,resolution):
-        self.height = height
-        self.width = width
-        self.resolution = resolution
-        self.origin = origin
-
-class MSG:
-    def __init__(self,info,data):
-        self.info = info
-        self.data = data
-
-
-# map1 = MapObject()
-# map1.res = 1
-# map1.height = 100
-# map1.width = 100
-# map1.pos = [-50, -50]
-
-# start = (-30, -30)
-# end = (40, 40)
-
-# start_time = time.time()
-# pri = False
-# any_a = False
-# ans = LPAStar(map1, start, end, 1, None, any_a, pri)
-# plt.clf()
-# # plt.imshow(map1)
-# if ans is not None:
-#     path, cost, tree = ans
-#     print "Total time 1st run: ", time.time() - start_time
-#     print "Path Cost", cost
-#     plt.plot(start[0], start[1], 'g.')
-#     plt.plot(end[0], end[1], 'r.')
-#     for p in range(1, len(path)):
-#         plt.plot([path[p-1][0],path[p][0]],[path[p-1][1],path[p][1]],'b-')
-#         plt.pause(.0001)
-# # plt.show()
-# pri = True
-# for i in range(2,11):
-#     start_time = time.time()
-#     ans = LPAStar(map1, start, tuple((np.random.rand(2)*70-30).astype("int")), 1, tree, any_a, pri)
-#     if ans is not None:
-#         path, cost, tree = ans
-#         th = "nd" if i == 2 else "rd" if i == 3 else "th"
-#         print "Total time %d"%i,th," run: ", time.time() - start_time
-#         print "Path Cost", cost
-#         for p in range(1, len(path)):
-#             plt.plot([path[p-1][0],path[p][0]],[path[p-1][1],path[p][1]],'b-')
-#             plt.pause(.0001)
-#     plt.pause(10)
-# plt.show()
-
-# print("Test path:")
-# for pos in path:
-#     print(pos)
-# print("Cost:", cost)
