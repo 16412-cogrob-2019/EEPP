@@ -79,11 +79,11 @@ class EEPP_node:
         nodestokeep = []
         # data_indices = np.arange(len(message)).tolist()
         for idx, node in  enumerate(message):
-            if self.map.risk_at((node["x"],node["y"])) > 0.9:
-                rospy.loginfo("PoI at (%f, %f) is inside an obstacle! Removing it...", node["x"],node["y"])
-                nodestoremove.append(idx)
-            else:
-                nodestokeep.append(idx)
+            # if self.map.risk_at((node["x"],node["y"])) > 0.9:
+            #     rospy.loginfo("PoI at (%f, %f) is inside an obstacle! Removing it...", node["x"],node["y"])
+            #     nodestoremove.append(idx)
+            # else:
+            nodestokeep.append(idx)
         for idx in sorted(nodestoremove, reverse=True):
             del message[idx]
 
@@ -107,7 +107,7 @@ class EEPP_node:
             robot_node["costs"] = []
             robot_node["paths"] = []
 
-            start = self.currentPos[rIdx]
+            start = (self.currentPos[rIdx][0],self.currentPos[rIdx][1])
             rospy.loginfo("Planning paths for agent %i starting at location (%f, %f)", rIdx, start[0], start[1])
             tree = None
 
@@ -150,7 +150,7 @@ class EEPP_node:
         rospy.loginfo("[EEPP] All paths found. Sending path data to MCTS")
         self.publish_paths(message)
         self.positions_up_to_date = False
-        self.currentPos = (node["x"], node["y"])
+        # self.currentPos = [node["x"], node["y"])
 
     '''
     Callback Function for when we receive the map from the map_server node. Take the occupancygrid and derive the info we need.
