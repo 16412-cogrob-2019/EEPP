@@ -21,8 +21,10 @@ class EEPP_node:
         self.alpha = 1.0 #1.0
     	self.map = None
         self.nRobots = n_agents
+        self.currentPos =[]
+        for i in range(n_agents):
+            self.currentPos.append([0.0, 0.0])
 
-        self.currentPos = [(0.0, 0.0)]*n_agents
         self.positions_up_to_date = False
 
         # Tree of previously planned paths
@@ -168,7 +170,7 @@ class EEPP_node:
         samples_y_vals = data.y_vals
 
         for agent_id in xrange(len(samples_y_vals)):
-            self.currentPos[agent_id] = (samples_x_vals[agent_id],samples_y_vals[agent_id])
+            self.currentPos[agent_id] = [samples_x_vals[agent_id],samples_y_vals[agent_id]]
         self.positions_up_to_date = True
         print(self.currentPos)
 
