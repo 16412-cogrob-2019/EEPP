@@ -21,21 +21,26 @@ class Node:
     def __str__(self):
         return str(self.position)
 
-def line_of_sight(node1, node2, map1):
+def line_of_sight(node1, node2, map):
     (x1, y1) = node1.position
     (x2, y2) = node2.position
 
-    # TODO: steps can be parameterized maybe
-    dx = (x2 - x1)
-    dy = (y2 - y1)
-    steps = 1 + int(max(abs(dx), abs(dy))) # integer number of horizontal steps
+    dx = x2-x1
+    dy = y2-y1
+    steps = 1 + int(max(abs(dx),abs(dy))) # integer number of horizontal steps
 
     dx = dx/steps
     dy = dy/steps
 
     for i in range(steps):
-        r = map1.risk_at((x1 + dx*i, y1 + dy*i))
-        if r == 1.0: # note to self: alternatively, r > 0.9 for tolerance
+        r = 0
+        # also check surrounding squares
+        for nx in [0, 1, -1]:
+            for ny in [0, 1, -1]:
+                x = x1 + dx*i + nx*4*map.res
+                y = y1 + dy*i + ny*4*map.res
+                r = max(r, map.risk_at((x, y)))
+        if r > 0.5: # == 1.0
             return False
     return True
 

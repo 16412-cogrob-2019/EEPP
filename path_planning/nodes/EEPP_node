@@ -21,7 +21,9 @@ class EEPP_node:
         self.alpha = 1.0 #1.0
     	self.map = None
         self.nRobots = n_agents
-        self.currentPos = [(1.44, -2.10)]
+
+        self.currentPos = [(0.0, 0.0)]*n_agents
+        self.positions_up_to_date = False
 
         # Tree of previously planned paths
         self.tree = None
@@ -32,7 +34,7 @@ class EEPP_node:
         # subscribers
         self.maas_sub = rospy.Subscriber("/maas/poi_data", String, self.maas_callback)
         self.map_sub = rospy.Subscriber(namespace+"/map", OccupancyGrid, self.map_callback)
-        self.position_sub = rospy.Subscriber('/activity/done', ActivityDone, self.position_callback, queue_size=1)
+        self.position_sub = rospy.Subscriber('/activity/done', ActivityDone, self.position_callback, queue_size = 10)
 
         # publishers
         self.mcts_pub = rospy.Publisher("/eepp/path_data", String, queue_size = 10) # jsonified data
@@ -53,13 +55,17 @@ class EEPP_node:
         	rospy.loginfo("[EEPP] Have not received map info yet! Unable to plan paths to POIs.")
         	return
 
+        if not self.positions_up_to_date:
+        	rospy.loginfo("[EEPP] Unable to update robot locations using ActivityDone msg. Aborting path-planning...")
+        	return
+
         #read in the message from MAAS
         message = json.loads(data.data)
 
-        message[0]["x"] = 0.285
-        message[0]["y"] = -0.693
-        message[1]["x"] = 0.99
-        message[1]["y"] = -2.25
+        # message[0]["x"] = 0.285
+        # message[0]["y"] = -0.693
+        # message[1]["x"] = 0.99
+        # message[1]["y"] = -2.25
         # message[2]["x"] = 1.54
         # message[2]["y"] = 0.092
         # message[3]["x"] = 0.5
@@ -78,7 +84,9 @@ class EEPP_node:
                 nodestokeep.append(idx)
         for idx in sorted(nodestoremove, reverse=True):
             del message[idx]
+
         nPoIs = self.nPoIs - len(nodestoremove)
+
         if len(message) < self.nRobots:
         	rospy.loginfo("[EEPP] The number of obstacle free PoIs is less than the number of robots! Aborting path-planning...")
         	return
@@ -118,7 +126,6 @@ class EEPP_node:
             message.append(robot_node)
 
         # Now plan paths from each node to each other node
-        
         for sIdx, startnode in enumerate(message[0:nPoIs]):
             start = (startnode["x"], startnode["y"])
             message[sIdx]["agent_id"] = -1
@@ -140,6 +147,7 @@ class EEPP_node:
 
         rospy.loginfo("[EEPP] All paths found. Sending path data to MCTS")
         self.publish_paths(message)
+        self.positions_up_to_date = False
         self.currentPos = (node["x"], node["y"])
 
     '''
@@ -156,11 +164,13 @@ class EEPP_node:
         :type data: ActivityDone
         """
         rospy.loginfo("[EEPP] Updating current robot locations")
-        samples_x_vals = data.x_vals #  message["x_vals"]
-        samples_y_vals = data.y_vals # message["y_vals"]
+        samples_x_vals = data.x_vals
+        samples_y_vals = data.y_vals
 
         for agent_id in xrange(len(samples_y_vals)):
             self.currentPos[agent_id] = (samples_x_vals[agent_id],samples_y_vals[agent_id])
+        self.positions_up_to_date = True
+        print(self.currentPos)
 
 
 ############################# Publisher functions ##############################
@@ -193,15 +203,15 @@ def main():
     rospy.init_node('EEPP', anonymous = True)
     # class instance
     EEPP = EEPP_node(rospy.get_param('n_agents'),rospy.get_param('n_pois'),rospy.get_param('n_neighbors'), rospy.get_param('namespace'))
-
+    rospy.spin()
     # create ros loop
-    pub_rate = 1 # hertz
-    rate = rospy.Rate(pub_rate)
-    while (not rospy.is_shutdown()):
+    # pub_rate = 0.1 # hertz
+    # rate = rospy.Rate(pub_rate)
+    # while (not rospy.is_shutdown()):
         # do some stuff if necessary (we only publish reactively in sub callback)
 
         # ros sleep (sleep to maintain loop rate)
-        rate.sleep()
+        # rate.sleep()
 
 if __name__ == '__main__':
     try:
