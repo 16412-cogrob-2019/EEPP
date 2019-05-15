@@ -1,0 +1,3 @@
+The Virtual Testing Environment is run by running the script "Main". This is the central user interface where all the high-level parameters are set. For example, start points and goal points can be chosen.
+
+Different algorithms can be selected in the module "auv.py" under "Release and Explore".
