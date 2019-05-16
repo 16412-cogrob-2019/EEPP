@@ -46,14 +46,29 @@ class Current():
         if current_type == "Down Vert":
             return self.vertical_d(grid, strength)
 
+        if current_type == "Alternating Vert":
+            return self.alternating_vert(grid, strength)
+
         return grid, np.zeros_like(grid)
+
+    def alternating_vert(self, grid, strength):
+        c_x = np.zeros_like(grid,dtype="float")
+        c_y = np.zeros_like(c_x,dtype="float")
+        for col in range(self.height_cells):
+            for row in range(self.width_cells):
+                # col_transformed = float(col-25)/self.width_cells * 4 * np.pi
+                # c_x_init = abs(np.sin(col_transformed))
+                # c_y_init = np.cos(col_transformed)
+                c_x[row, col] = 0
+                c_y[row, col] = strength if not col % 2 else -strength
+        return c_x, c_y
 
     def sine_wave_h(self, grid, strength):
         c_x = np.zeros_like(grid,dtype="float")
         c_y = np.zeros_like(c_x,dtype="float")
         for col in range(self.height_cells):
             for row in range(self.width_cells):
-                col_transformed = float(col)/self.width_cells * 10*np.pi
+                col_transformed = float(col-25)/self.width_cells * 4 * np.pi
                 c_x_init = abs(np.sin(col_transformed))
                 c_y_init = np.cos(col_transformed)
                 c_x[row, col] = strength*c_x_init/(c_x_init**2+c_y_init**2)**.5
@@ -107,6 +122,7 @@ class Current():
                     amplitude = 0
                 else:
                     amplitude = strength/np.linalg.norm(diff)
+                amplitude = strength
                 c_x[row, col] = -amplitude*np.cos(np.arctan2(diff[1],diff[0]))
                 c_y[row, col] = amplitude*np.sin(np.arctan2(diff[1],diff[0]))
         return c_x, c_y
@@ -122,6 +138,7 @@ class Current():
                     amplitude = 0
                 else:
                     amplitude = strength/np.linalg.norm(diff)
+                amplitude = strength
                 c_x[row, col] = amplitude*np.cos(np.arctan2(diff[1],diff[0]))
                 c_y[row, col] = -amplitude*np.sin(np.arctan2(diff[1],diff[0]))
         return c_x, c_y
